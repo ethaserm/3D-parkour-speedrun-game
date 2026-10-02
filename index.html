@@ -1,0 +1,2719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#4aa3ff">
+<meta name="description" content="SPRINT: a bright 3D parkour speedrun game. Run, jump, slide, wall-run and race your own ghost.">
+<title>SPRINT · Parkour Speedrun</title>
+<style>
+/* ==========================================================================
+   STYLE
+   ========================================================================== */
+:root{
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --ink:#1c1640;--ink-soft:#5d5684;--pink:#ff3d87;--pink-d:#c81f63;--blue:#3d6bff;--blue-d:#2347c4;
+  --good:#18d277;--bad:#ff3b55;--gold:#ffc23a;--silver:#c9d3e3;--bronze:#e28b4b;
+  --shadow:0 18px 50px rgba(28,18,80,.28),0 3px 10px rgba(28,18,80,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#9fd6ff;color:var(--ink);font-family:var(--font);
+  touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  -webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+button{font-family:inherit;color:inherit}
+#game{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none;touch-action:none}
+.hidden{display:none!important}
+
+/* ---------- screens & panels ---------- */
+.screen{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+  padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
+  opacity:0;visibility:hidden;pointer-events:none;transition:opacity .28s ease,visibility 0s linear .28s}
+.screen.show{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .28s ease}
+.screen.dim{background:radial-gradient(ellipse at center,rgba(30,20,80,.22),rgba(20,12,60,.55))}
+.panel{position:relative;background:rgba(255,255,255,.97);border-radius:28px;box-shadow:var(--shadow);padding:24px;
+  width:min(460px,100%);max-height:100%;display:flex;flex-direction:column;gap:14px;
+  transform:translateY(18px) scale(.97);transition:transform .38s cubic-bezier(.2,1.25,.3,1)}
+.screen.show .panel{transform:none}
+.panel.xl{width:min(1100px,100%)}
+.panel h2{margin:0;font-size:26px;font-weight:900;letter-spacing:-.01em}
+.panel p{margin:0;color:var(--ink-soft);font-weight:600;line-height:1.4}
+.panel-head{display:flex;align-items:center;gap:12px}
+.panel-head h2{flex:1}
+.scroll{overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;min-height:0}
+
+/* ---------- buttons ---------- */
+.btn{font:800 17px/1 var(--font);letter-spacing:.01em;border:0;border-radius:16px;padding:14px 20px;background:#eef0ff;color:var(--ink);
+  cursor:pointer;box-shadow:0 4px 0 #cfd3f3;transition:transform .08s,box-shadow .08s,filter .15s;white-space:nowrap}
+.btn:hover{filter:brightness(1.04);transform:translateY(-1px)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #cfd3f3}
+.btn.primary{background:linear-gradient(180deg,#ff6aa8,#ff3d87);color:#fff;box-shadow:0 5px 0 var(--pink-d)}
+.btn.primary:active{box-shadow:0 1px 0 var(--pink-d)}
+.btn.blue{background:linear-gradient(180deg,#6b8dff,#3d6bff);color:#fff;box-shadow:0 5px 0 var(--blue-d)}
+.btn.danger{background:linear-gradient(180deg,#ff6b7d,#ff3b55);color:#fff;box-shadow:0 5px 0 #b81d33}
+.btn.big{font-size:24px;padding:18px 34px;border-radius:20px}
+.btn.small{font-size:14px;padding:10px 14px;border-radius:12px}
+.btn.icon{width:46px;height:46px;padding:0;font-size:22px;border-radius:14px;flex:none}
+.btn:disabled{opacity:.45;pointer-events:none}
+.btn-col{display:flex;flex-direction:column;gap:12px}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn-row .btn{flex:1;min-width:110px}
+kbd{font:800 12px/1 var(--font);background:#eef0ff;border-radius:6px;padding:3px 6px;box-shadow:0 2px 0 #cfd3f3;color:var(--ink)}
+
+/* ---------- loading / title ---------- */
+.center-col{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
+.logo{font-weight:900;font-style:italic;letter-spacing:-.045em;font-size:clamp(56px,13vw,150px);line-height:.9;padding:0 .1em .06em;
+  background:linear-gradient(100deg,#ff3d87 0%,#ff8a3d 32%,#ffd23f 52%,#36d7ff 76%,#6b5bff 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 6px 0 rgba(28,18,80,.28)) drop-shadow(0 18px 28px rgba(28,18,80,.25))}
+.logo.small{font-size:64px}
+.tagline{font-weight:900;font-size:clamp(15px,2.6vw,21px);letter-spacing:.2em;text-transform:uppercase;color:#fff;text-shadow:0 2px 0 rgba(28,18,80,.3),0 4px 16px rgba(28,18,80,.35)}
+.title-col .btn-col{width:min(300px,80vw);margin-top:10px}
+.foot-note{margin-top:8px;font-weight:700;font-size:13px;color:#fff;opacity:.92;text-shadow:0 1px 6px rgba(28,18,80,.5)}
+.load-msg{font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(28,18,80,.4)}
+.load-msg.err{background:#fff;color:var(--bad);padding:12px 16px;border-radius:14px;box-shadow:var(--shadow);text-shadow:none}
+
+/* ---------- level select ---------- */
+.medal-tally{display:flex;gap:8px;font-weight:900}
+.tally{display:flex;align-items:center;gap:5px;background:#f2f3ff;border-radius:999px;padding:6px 10px 6px 6px;font-size:14px}
+.level-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;padding:4px}
+.card{position:relative;text-align:left;border:0;border-radius:22px;padding:0;background:#fff;cursor:pointer;overflow:hidden;
+  box-shadow:0 6px 0 #dfe2f7,0 10px 24px rgba(28,18,80,.12);transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column}
+.card:hover{transform:translateY(-3px);box-shadow:0 9px 0 #dfe2f7,0 16px 30px rgba(28,18,80,.18)}
+.card:active{transform:translateY(3px);box-shadow:0 2px 0 #dfe2f7}
+.card-top{height:78px;position:relative;background:linear-gradient(135deg,var(--c1),var(--c2));overflow:hidden}
+.card-top::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.16) 0 14px,transparent 14px 34px)}
+.card-num{position:absolute;left:14px;bottom:8px;font:italic 900 46px/1 var(--font);color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.18);z-index:1}
+.card-medal{position:absolute;right:12px;top:12px;z-index:1}
+.card-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card-name{font-weight:900;font-size:19px}
+.card-hint{font-weight:600;font-size:13px;color:var(--ink-soft);line-height:1.3;min-height:34px}
+.card-best{font-weight:800;font-size:14px;color:var(--ink-soft)}
+.card-best b{color:var(--ink);font-size:17px;font-variant-numeric:tabular-nums}
+.card-medals{display:flex;gap:6px;flex-wrap:wrap}
+.mchip{display:flex;align-items:center;gap:4px;font-weight:800;font-size:12px;font-variant-numeric:tabular-nums;background:#f3f4fb;border-radius:999px;padding:3px 8px 3px 3px}
+.card.locked{cursor:not-allowed}
+.card.locked .card-top{filter:grayscale(.85) brightness(.9)}
+.card.locked .card-body{opacity:.55}
+.lock{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:6px;
+  background:rgba(255,255,255,.35);font-weight:900;font-size:14px;color:var(--ink);text-align:center;padding:12px;z-index:2}
+.card.locked .lock{display:flex}
+.lock svg{width:30px;height:30px}
+
+/* ---------- medals ---------- */
+.medal{width:var(--s,22px);height:var(--s,22px);border-radius:50%;flex:none;display:inline-block;position:relative;
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.18),0 2px 4px rgba(0,0,0,.18)}
+.medal::after{content:"";position:absolute;inset:22%;border-radius:50%;border:2px solid rgba(255,255,255,.55)}
+.medal.gold{background:radial-gradient(circle at 35% 30%,#fff3b8,#ffc23a 45%,#e89a10)}
+.medal.silver{background:radial-gradient(circle at 35% 30%,#ffffff,#c9d3e3 45%,#8e9bb2)}
+.medal.bronze{background:radial-gradient(circle at 35% 30%,#ffd9b8,#e28b4b 45%,#a8552a)}
+.medal.none{background:#e6e8f5;box-shadow:inset 0 2px 3px rgba(0,0,0,.08)}
+.medal.none::after{display:none}
+
+/* ---------- settings ---------- */
+.settings{display:flex;flex-direction:column;gap:6px}
+.row{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid #eef0fa;font-weight:800}
+.row>span:first-child{flex:1}
+.row output{min-width:44px;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-soft)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:140px;height:8px;border-radius:99px;background:#e4e7fb;outline:none;touch-action:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--pink);box-shadow:0 2px 0 var(--pink-d);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;background:var(--pink);box-shadow:0 2px 0 var(--pink-d);cursor:pointer}
+.toggle{width:54px;height:30px;border-radius:99px;border:0;background:#dcdff3;position:relative;cursor:pointer;transition:background .2s;flex:none}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .2s}
+.toggle.on{background:var(--good)}
+.toggle.on::after{transform:translateX(24px)}
+.seg{display:flex;background:#eef0fa;border-radius:12px;padding:3px;gap:3px}
+.seg button{border:0;background:transparent;font:800 13px/1 var(--font);padding:8px 10px;border-radius:9px;cursor:pointer;color:var(--ink-soft)}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 2px 6px rgba(28,18,80,.12)}
+.save-note{font-size:12px;font-weight:700;color:var(--ink-soft);text-align:center;min-height:14px}
+
+/* ---------- controls help ---------- */
+.ctl-list{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;align-items:center;font-weight:700}
+.ctl-list .k{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+
+/* ---------- results ---------- */
+.results{align-items:center;text-align:center;width:min(500px,100%)}
+.res-course{font-weight:900;letter-spacing:.18em;text-transform:uppercase;font-size:13px;color:var(--ink-soft)}
+.res-time{font:900 clamp(52px,12vw,76px)/1 var(--font);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.res-delta{font-weight:900;font-size:18px;min-height:22px}
+.res-delta.good{color:var(--good)} .res-delta.bad{color:var(--bad)}
+.res-medal{display:flex;align-items:center;gap:12px;font-weight:900;font-size:20px;min-height:52px}
+.res-medal .medal{--s:48px;animation:medalIn .6s cubic-bezier(.2,1.6,.4,1)}
+@keyframes medalIn{0%{transform:scale(0) rotate(-90deg)}100%{transform:none}}
+.res-targets{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.res-targets .mchip.hit{background:#e7fbef}
+.res-splits{width:100%;max-height:150px;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums}
+.split-row{display:flex;justify-content:space-between;padding:6px 8px;border-radius:10px}
+.split-row:nth-child(odd){background:#f5f6fd}
+.split-row .d{min-width:70px;text-align:right}
+.d.good{color:var(--good)} .d.bad{color:var(--bad)}
+.new-best{display:inline-block;background:linear-gradient(90deg,#ffd23f,#ff8a3d);color:#fff;border-radius:999px;padding:6px 14px;font-weight:900;letter-spacing:.06em;box-shadow:0 3px 0 #d06a1e}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;inset:0;z-index:10;pointer-events:none;color:#fff;transition:opacity .25s}
+.hud-top{position:absolute;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;width:max-content}
+.timer{font-weight:900;font-size:clamp(40px,7.5vw,72px);line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+  text-shadow:0 3px 0 rgba(28,18,80,.35),0 6px 22px rgba(28,18,80,.35);transition:color .2s}
+.timer.done{color:#fff7cf}
+.hud-course{font-weight:900;font-size:12px;letter-spacing:.2em;text-transform:uppercase;text-shadow:0 2px 6px rgba(28,18,80,.55)}
+.hud-sub{display:flex;gap:8px;font-weight:800;font-size:13px}
+.chip{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(20,12,60,.34);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font-variant-numeric:tabular-nums}
+.chip .medal{--s:14px}
+.chip:empty{display:none}
+.penalty-pop{position:absolute;top:100%;left:50%;margin-top:6px;font-weight:900;font-size:30px;color:var(--bad);opacity:0;transform:translateX(-50%);
+  text-shadow:0 2px 0 rgba(255,255,255,.7),0 4px 14px rgba(28,18,80,.4);white-space:nowrap}
+.penalty-pop.go{animation:penalty 1.2s ease-out}
+@keyframes penalty{0%{opacity:0;transform:translate(-50%,-8px) scale(.7)}12%{opacity:1;transform:translate(-50%,0) scale(1.18)}25%{transform:translate(-50%,0) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,8px)}}
+.split-pop{position:absolute;top:23%;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px;opacity:0;
+  font-weight:900;text-shadow:0 2px 0 rgba(28,18,80,.3),0 4px 14px rgba(28,18,80,.35);white-space:nowrap}
+.split-pop .lbl{font-size:13px;letter-spacing:.2em;text-transform:uppercase}
+.split-pop .t{font-size:30px;font-variant-numeric:tabular-nums}
+.split-pop .d{font-size:24px;font-variant-numeric:tabular-nums;padding:2px 12px;border-radius:999px;background:rgba(255,255,255,.92);text-shadow:none}
+.split-pop.go{animation:splitPop 2s ease-out}
+@keyframes splitPop{0%{opacity:0;transform:translate(-50%,10px) scale(.85)}10%{opacity:1;transform:translate(-50%,0) scale(1.06)}20%{transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-8px)}}
+.big-pop{position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);font:italic 900 clamp(44px,9vw,92px)/1 var(--font);white-space:nowrap;opacity:0;
+  background:linear-gradient(100deg,#ffd23f,#ff8a3d 50%,#ff3d87);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 0 rgba(28,18,80,.3)) drop-shadow(0 10px 20px rgba(28,18,80,.3))}
+.big-pop.go{animation:bigPop 2.4s cubic-bezier(.2,1.2,.3,1)}
+@keyframes bigPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-8deg)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.1) rotate(-3deg)}25%{transform:translate(-50%,-50%) scale(1) rotate(-3deg)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) scale(1) rotate(-3deg)}}
+.countdown{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);font:italic 900 clamp(90px,22vw,210px)/1 var(--font);color:#fff;opacity:0;
+  text-shadow:0 6px 0 rgba(28,18,80,.3),0 14px 40px rgba(28,18,80,.35)}
+.countdown.go{animation:cd .95s ease-out forwards}
+.countdown.gogo{color:#ffe14d;animation:cdGo 1s ease-out forwards}
+@keyframes cd{0%{opacity:0;transform:translate(-50%,-50%) scale(1.8)}15%{opacity:1;transform:translate(-50%,-50%) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(.85)}}
+@keyframes cdGo{0%{opacity:0;transform:translate(-50%,-50%) scale(.5) rotate(-6deg)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.15) rotate(-6deg)}60%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.6) rotate(-6deg)}}
+.crosshair{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(28,18,80,.35);opacity:.85}
+.hud-bottom{position:absolute;bottom:max(16px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;align-items:flex-end;gap:12px}
+.speedo{display:flex;flex-direction:column;align-items:center;font-weight:900;text-shadow:0 2px 6px rgba(28,18,80,.5)}
+.speedo .v{font-size:26px;font-variant-numeric:tabular-nums;line-height:1}
+.speedo small{font-size:11px;letter-spacing:.15em;opacity:.9}
+.speedbar{width:150px;height:7px;border-radius:99px;background:rgba(20,12,60,.35);margin-top:5px;overflow:hidden}
+.speedbar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#36d7ff,#ffd23f 60%,#ff3d87);transition:width .08s linear}
+.dash-pip{font:900 11px/1 var(--font);letter-spacing:.14em;padding:7px 10px;border-radius:999px;background:rgba(20,12,60,.34);color:rgba(255,255,255,.45);transition:background .15s,color .15s,transform .15s;margin-bottom:6px}
+.dash-pip.ready{background:#36d7ff;color:#fff;box-shadow:0 0 16px rgba(54,215,255,.7)}
+.controls-hint{position:absolute;left:max(16px,env(safe-area-inset-left));bottom:max(16px,env(safe-area-inset-bottom));background:rgba(20,12,60,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-radius:18px;padding:12px 14px;display:grid;grid-template-columns:auto auto;gap:5px 10px;font-weight:800;font-size:13px;opacity:0;transform:translateY(10px);transition:opacity .4s,transform .4s;max-width:46vw}
+.controls-hint.show{opacity:1;transform:none}
+.controls-hint kbd{background:rgba(255,255,255,.92)}
+.controls-hint .k{text-align:right;white-space:nowrap}
+.lock-hint{position:absolute;left:50%;top:62%;transform:translateX(-50%);font-weight:900;font-size:16px;padding:10px 18px;border-radius:999px;background:rgba(20,12,60,.5);opacity:0;transition:opacity .3s;white-space:nowrap}
+.lock-hint.show{opacity:1}
+.flash{position:fixed;inset:0;z-index:9;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(255,255,255,0) 40%,rgba(255,59,85,.55))}
+.flash.go{animation:flash .45s ease-out}
+.flash.white{background:rgba(255,255,255,.65)}
+@keyframes flash{0%{opacity:1}100%{opacity:0}}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);z-index:40;background:var(--ink);color:#fff;font-weight:800;padding:10px 16px;border-radius:14px;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- touch controls ---------- */
+#touch{position:fixed;inset:0;z-index:12;touch-action:none}
+.tbtn{position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,.6);background:rgba(20,12,60,.28);color:#fff;font:900 15px/1 var(--font);letter-spacing:.06em;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);touch-action:none;display:flex;align-items:center;justify-content:center;padding:0;transition:background .08s,transform .08s}
+.tbtn.on{background:rgba(255,255,255,.5);transform:scale(.94)}
+.t-jump{right:calc(22px + env(safe-area-inset-right));bottom:calc(26px + env(safe-area-inset-bottom));width:108px;height:108px;font-size:17px}
+.t-slide{right:calc(144px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));width:82px;height:82px}
+.t-dash{right:calc(36px + env(safe-area-inset-right));bottom:calc(150px + env(safe-area-inset-bottom));width:82px;height:82px}
+.t-dash.ready{border-color:#36d7ff;box-shadow:0 0 14px rgba(54,215,255,.7)}
+.t-small{top:calc(12px + env(safe-area-inset-top));width:50px;height:50px;font-size:17px}
+.t-pause{right:calc(12px + env(safe-area-inset-right))}
+.t-restart{right:calc(70px + env(safe-area-inset-right))}
+.t-view{right:calc(128px + env(safe-area-inset-right));font-size:13px}
+.stick{position:absolute;left:0;top:0;width:132px;height:132px;margin:-66px 0 0 -66px;border-radius:50%;border:2px solid rgba(255,255,255,.55);background:rgba(20,12,60,.2);opacity:.45;pointer-events:none;transition:opacity .15s}
+.stick.on{opacity:1}
+.knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 3px 10px rgba(0,0,0,.25)}
+@media (max-height:500px){.t-jump{width:92px;height:92px}.t-slide,.t-dash{width:70px;height:70px}.t-slide{right:calc(126px + env(safe-area-inset-right))}.t-dash{bottom:calc(128px + env(safe-area-inset-bottom))}.timer{font-size:40px}.speedo .v{font-size:20px}}
+@media (max-width:640px){.panel{padding:18px;border-radius:22px}.level-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}.medal-tally .tally span{display:none}}
+</style>
+</head>
+<body>
+<canvas id="game" tabindex="-1" aria-label="SPRINT game view"></canvas>
+
+<!-- ======================= LOADING ======================= -->
+<div id="scr-loading" class="screen show">
+  <div class="center-col">
+    <div class="logo">SPRINT</div>
+    <div id="loadMsg" class="load-msg">Loading…</div>
+  </div>
+</div>
+
+<!-- ======================= TITLE ======================= -->
+<div id="scr-title" class="screen">
+  <div class="center-col title-col">
+    <div class="logo">SPRINT</div>
+    <div class="tagline">Run · Jump · Slide · Beat your ghost</div>
+    <div class="btn-col">
+      <button class="btn primary big" data-act="play">Play</button>
+      <button class="btn" data-act="settings">Settings</button>
+      <button class="btn" data-act="controls">Controls</button>
+    </div>
+    <div class="foot-note" id="titleNote"></div>
+  </div>
+</div>
+
+<!-- ======================= LEVEL SELECT ======================= -->
+<div id="scr-levels" class="screen dim">
+  <div class="panel xl" style="height:100%;max-height:820px">
+    <div class="panel-head">
+      <button class="btn icon" data-act="back" aria-label="Back">&#8592;</button>
+      <h2>Choose a course</h2>
+      <div class="medal-tally" id="medalTally"></div>
+    </div>
+    <div id="levelGrid" class="level-grid scroll"></div>
+  </div>
+</div>
+
+<!-- ======================= PAUSE ======================= -->
+<div id="scr-pause" class="screen dim">
+  <div class="panel" style="width:min(360px,100%)">
+    <h2>Paused</h2>
+    <div class="btn-col">
+      <button class="btn primary" data-act="resume">Resume</button>
+      <button class="btn" data-act="restart">Restart <kbd>R</kbd></button>
+      <button class="btn" data-act="settings">Settings</button>
+      <button class="btn" data-act="controls">Controls</button>
+      <button class="btn" data-act="levels">Course select</button>
+      <button class="btn" data-act="title">Main menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= SETTINGS ======================= -->
+<div id="scr-settings" class="screen dim">
+  <div class="panel" style="width:min(520px,100%)">
+    <div class="panel-head"><button class="btn icon" data-act="back" aria-label="Back">&#8592;</button><h2>Settings</h2></div>
+    <div class="settings scroll">
+      <label class="row"><span>Look sensitivity</span><input type="range" id="setSens" min="0.2" max="3" step="0.05"><output id="outSens"></output></label>
+      <label class="row"><span>Field of view</span><input type="range" id="setFov" min="70" max="120" step="1"><output id="outFov"></output></label>
+      <label class="row"><span>Volume</span><input type="range" id="setVol" min="0" max="1" step="0.05"><output id="outVol"></output></label>
+      <div class="row"><span>Mute <kbd>M</kbd></span><button class="toggle" id="setMute" aria-label="Mute"></button></div>
+      <div class="row"><span>View <kbd>V</kbd></span><div class="seg" id="setView"><button data-v="fp">First person</button><button data-v="tp">Third person</button></div></div>
+      <div class="row"><span>Ghost</span><button class="toggle" id="setGhost" aria-label="Ghost"></button></div>
+      <div class="row"><span>Quality</span><div class="seg" id="setQuality"><button data-v="high">High</button><button data-v="low">Low</button></div></div>
+      <div class="row"><span>Invert look Y</span><button class="toggle" id="setInvert" aria-label="Invert Y"></button></div>
+      <div class="row"><span>Unlock all courses</span><button class="toggle" id="setUnlockAll" aria-label="Unlock all"></button></div>
+      <div class="row"><span>Progress</span><button class="btn danger small" data-act="resetSave">Reset save…</button></div>
+      <div class="save-note" id="saveNote"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= CONTROLS ======================= -->
+<div id="scr-controls" class="screen dim">
+  <div class="panel" style="width:min(460px,100%)">
+    <div class="panel-head"><button class="btn icon" data-act="back" aria-label="Back">&#8592;</button><h2>Controls</h2></div>
+    <div class="ctl-list scroll" id="ctlList"></div>
+  </div>
+</div>
+
+<!-- ======================= RESULTS ======================= -->
+<div id="scr-results" class="screen dim">
+  <div class="panel results">
+    <div class="res-course" id="resCourse"></div>
+    <div id="resBadge"></div>
+    <div class="res-time" id="resTime">0:00.00</div>
+    <div class="res-delta" id="resDelta"></div>
+    <div class="res-medal" id="resMedal"></div>
+    <div class="res-targets" id="resTargets"></div>
+    <div class="res-splits scroll" id="resSplits"></div>
+    <div class="btn-row" style="width:100%">
+      <button class="btn" data-act="levels">Menu</button>
+      <button class="btn primary" data-act="retry">Retry <kbd>R</kbd></button>
+      <button class="btn blue" data-act="next" id="btnNext">Next <kbd>N</kbd></button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= CONFIRM ======================= -->
+<div id="scr-confirm" class="screen dim">
+  <div class="panel" style="width:min(400px,100%)">
+    <h2>Reset all progress?</h2>
+    <p>This permanently deletes best times, medals, ghosts and unlocks. Your settings are kept.</p>
+    <div class="btn-row"><button class="btn" data-act="back">Cancel</button><button class="btn danger" data-act="confirmReset">Reset</button></div>
+  </div>
+</div>
+
+<!-- ======================= HUD ======================= -->
+<div id="hud" class="hidden">
+  <div class="hud-top">
+    <div class="hud-course" id="hudCourse"></div>
+    <div class="timer" id="timer">0:00.00</div>
+    <div class="hud-sub"><span class="chip" id="hudCp"></span><span class="chip" id="hudTarget"></span></div>
+    <div class="penalty-pop" id="penaltyPop">+1.0 s</div>
+  </div>
+  <div class="split-pop" id="splitPop"><span class="lbl"></span><span class="t"></span><span class="d"></span></div>
+  <div class="big-pop" id="bigPop"></div>
+  <div class="countdown" id="countdown"></div>
+  <div class="crosshair" id="crosshair"></div>
+  <div class="hud-bottom">
+    <div class="speedo"><span class="v" id="speedVal">0.0</span><small>M/S</small><div class="speedbar"><i id="speedFill"></i></div></div>
+    <div class="dash-pip" id="dashPip">DASH</div>
+  </div>
+  <div class="controls-hint" id="controlsHint"></div>
+  <div class="lock-hint" id="lockHint">Click to look around</div>
+</div>
+
+<!-- ======================= TOUCH ======================= -->
+<div id="touch" class="hidden">
+  <div class="stick" id="stick"><div class="knob" id="stickKnob"></div></div>
+  <button class="tbtn t-small t-pause" data-t="pause" aria-label="Pause">II</button>
+  <button class="tbtn t-small t-restart" data-t="restart" aria-label="Restart">&#8635;</button>
+  <button class="tbtn t-small t-view" data-t="view" aria-label="Toggle view">VIEW</button>
+  <button class="tbtn t-slide" data-t="slide">SLIDE</button>
+  <button class="tbtn t-dash" data-t="dash" id="tDash">DASH</button>
+  <button class="tbtn t-jump" data-t="jump">JUMP</button>
+</div>
+
+<div class="flash" id="flash"></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+// ============================================================================
+// BOOT: load Three.js (pinned to r160) from a CDN, with a second mirror as fallback.
+// ============================================================================
+const DEBUG = /[?&]debug\b/.test(location.search);
+const THREE_VERSION = '0.160.0';
+const THREE_URLS = [
+  `https://cdn.jsdelivr.net/npm/three@${THREE_VERSION}/build/three.module.min.js`,
+  `https://unpkg.com/three@${THREE_VERSION}/build/three.module.min.js`,
+];
+let THREE = null;
+for (const url of THREE_URLS) {
+  try { THREE = await import(url); break; } catch (err) { /* try the next mirror */ }
+}
+if (!THREE) {
+  const m = document.getElementById('loadMsg');
+  m.innerHTML = 'Couldn’t load the 3D engine (Three.js) from the CDN.<br>Check your connection and reload the page.';
+  m.classList.add('err');
+  await new Promise(() => {}); // halt quietly
+}
+
+// ============================================================================
+// CONFIG: every gameplay tuning value lives here.
+// ============================================================================
+const CONFIG = {
+  physicsHz: 120,          // fixed simulation rate; physics, timer and ghost all run on this clock
+  maxFrameDt: 0.1,         // clamp very long frames (tab switches) so the sim never spirals
+  maxStepsPerFrame: 14,
+  player: {
+    radius: 0.35,          // collision cylinder radius (m)
+    standHeight: 1.8,
+    slideHeight: 0.9,      // hitbox while sliding / crouching: fits under 1.0 m+ gaps
+    eyeStand: 1.62,
+    eyeSlide: 0.78,
+    stepHeight: 0.3,       // tiny ledges are climbed automatically while grounded
+    ledgeAssist: 0.45,     // airborne: if your feet are this close below a ledge you hit, you mantle onto it
+  },
+  move: {
+    runSpeed: 9.0,         // base run speed (m/s)
+    maxRunSpeed: 14.0,     // top speed reached by sustained running or chaining jumps/slides
+    buildRate: 1.6,        // m/s gained per second of straight running at top speed
+    groundAccel: 70,       // snappy ground acceleration (m/s²)
+    groundDecel: 45,       // braking with no input (m/s²)
+    idleDecay: 3.0,        // momentum (top speed) lost per second with no input
+    turnDecay: 10.0,       // momentum lost per second while turning hard
+    hardTurnDot: 0.5,      // cos(angle) between wish and velocity below which a turn is "hard" (60°)
+    overspeedDecay: 3.5,   // how fast bonus speed (slide/dash/pad) bleeds off on the ground (m/s²)
+    airAccel: 24,          // air steering (m/s²): reduced vs ground, never adds speed above current
+    bhopWindow: 0.12,      // jump within this time of landing to chain momentum
+    bhopBoost: 0.6,        // top-speed bonus for a chained jump
+  },
+  jump: {
+    apex: 1.1,             // full jump height (m)
+    gravity: 26,           // rising gravity (m/s²)
+    fallMult: 1.2,         // heavier falling for a snappier arc
+    cutMult: 2.6,          // gravity multiplier once jump is released while rising (variable height)
+    coyote: 0.10,          // seconds after leaving a ledge you can still jump
+    buffer: 0.12,          // seconds a jump press is remembered before landing
+    maxFall: 40,
+    groundStick: 2,        // small downward velocity while grounded so ledges are detected cleanly
+  },
+  slide: {
+    minEntrySpeed: 5.5,    // below this, Shift/C crouches instead of sliding
+    boost: 3.0,            // speed added on slide entry
+    maxBoostedSpeed: 16.5, // the entry boost never takes you above this
+    friction: 5.0,         // slide deceleration (m/s²)
+    endSpeed: 4.5,         // slide ends below this speed
+    minTime: 0.3,          // a tap still gives a short slide
+    cooldown: 0.6,         // boost is only granted if the previous slide started this long ago
+    steer: 2.5,            // rad/s of steering while sliding
+    crouchSpeed: 4.5,
+  },
+  wallRun: {
+    minSpeed: 5.0,         // speed along the wall needed to attach
+    speed: 10.5,           // wall-run speed you accelerate to (higher speeds are kept)
+    accel: 10,
+    maxTime: 1.5,          // seconds before you peel off
+    gravityScale: 0.15,    // reduced gravity while attached
+    attachVyMin: 0.6,      // vertical velocity is clamped into this range when you attach,
+    attachVyMax: 2.8,      //   which "catches" falls and caps runaway climbs
+    probe: 0.2,            // extra reach beyond the radius when looking for a wall
+    stick: 0.8,            // small velocity into the wall to stay attached
+    cooldown: 0.25,        // seconds before any wall can be grabbed again
+    rollDeg: 13,           // camera roll away from the wall
+    topMargin: 0.3,        // feet must be at least this far below the top of the wall
+  },
+  wallJump: { up: 7.6, out: 6.5 },   // impulse up and away from the wall; along-wall speed is kept
+  dash: {
+    duration: 0.15,        // seconds of burst
+    speed: 20,             // burst speed (m/s) in the facing direction, no gravity
+    exitBoost: 2.0,        // you leave the dash this much faster than you entered (min run speed)
+    exitMax: 16,
+    buffer: 0.1,
+  },
+  pad: { power: 17 },      // bounce pad upward velocity (m/s) → ≈5.6 m apex
+  respawnPenalty: 1.0,     // seconds added to the timer on respawn
+  fallKillDepth: 12,       // respawn once you fall this far below the last thing you stood on (or below the course kill plane)
+  countdown: 3,            // seconds
+  camera: {
+    fov: 100,              // default horizontal FOV (degrees, converted to vertical per aspect)
+    fovBoost: 14,          // extra horizontal FOV at high speed
+    tpDist: 4.8, tpPitchMin: -1.2, tpPitchMax: 1.0,
+    bob: 0.035,
+    mouseSens: 0.0022,     // radians per pixel at sensitivity 1
+    touchSens: 0.0055,
+  },
+  ghost: { hz: 30, maxSeconds: 600 },
+  render: { bevel: 0.14, tile: 2, shadowSize: 2048, shadowExtent: 30, particles: 1600 },
+};
+CONFIG.jump.velocity = Math.sqrt(2 * CONFIG.jump.gravity * CONFIG.jump.apex);   // ≈7.56 m/s
+const STEP = 1 / CONFIG.physicsHz;
+const GHOST_EVERY = Math.round(CONFIG.physicsHz / CONFIG.ghost.hz);            // record every 4th step
+
+// ============================================================================
+// UTIL
+// ============================================================================
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const damp = (a, b, lambda, dt) => lerp(a, b, 1 - Math.exp(-lambda * dt));
+const smoothstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const wrapAngle = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
+const angleDiff = (a, b) => wrapAngle(b - a);
+const $ = (id) => document.getElementById(id);
+function mulberry32(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+// Speedrun timers truncate rather than round.
+function fmtTime(t) {
+  if (t == null || !isFinite(t)) return '—';
+  const cs = Math.floor(t * 100 + 1e-6);
+  const m = Math.floor(cs / 6000), s = Math.floor((cs % 6000) / 100), c = cs % 100;
+  return `${m}:${String(s).padStart(2, '0')}.${String(c).padStart(2, '0')}`;
+}
+function fmtDelta(d) {
+  const cs = Math.round(Math.abs(d) * 100);
+  const s = (cs / 100).toFixed(2);
+  return (d < 0 ? '−' : '+') + s;
+}
+
+// ============================================================================
+// SAVE: versioned localStorage with an in-memory fallback.
+// ============================================================================
+const SAVE_KEY = 'sprint.save.v1';
+const GHOST_KEY = (id) => `sprint.ghost.v1.${id}`;
+const Store = (() => {
+  let ok = false; const mem = {};
+  try { const k = '__sprint_probe__'; localStorage.setItem(k, '1'); localStorage.removeItem(k); ok = true; } catch (e) { ok = false; }
+  return {
+    get ok() { return ok; },
+    get(k) { if (!ok) return k in mem ? mem[k] : null; try { return localStorage.getItem(k); } catch (e) { return k in mem ? mem[k] : null; } },
+    set(k, v) { mem[k] = v; if (!ok) return false; try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+    remove(k) { delete mem[k]; if (!ok) return; try { localStorage.removeItem(k); } catch (e) { /* ignore */ } },
+  };
+})();
+const DEFAULT_SETTINGS = { sens: 1.0, fov: CONFIG.camera.fov, volume: 0.7, muted: false, view: 'fp', ghost: true, quality: 'high', invertY: false };
+function freshSave() { return { v: 1, best: {}, unlocked: 1, unlockAll: false, hintsSeen: false, settings: { ...DEFAULT_SETTINGS } }; }
+function loadSave() {
+  let d = null;
+  try { d = JSON.parse(Store.get(SAVE_KEY) || 'null'); } catch (e) { d = null; }
+  if (!d || typeof d !== 'object' || d.v !== 1) d = freshSave();
+  const s = { ...DEFAULT_SETTINGS, ...(d.settings && typeof d.settings === 'object' ? d.settings : {}) };
+  // sanitise everything we read back
+  s.sens = clamp(+s.sens || 1, 0.2, 3); s.fov = clamp(+s.fov || CONFIG.camera.fov, 70, 120); s.volume = clamp(+s.volume, 0, 1);
+  if (!isFinite(s.volume)) s.volume = DEFAULT_SETTINGS.volume;
+  s.muted = !!s.muted; s.ghost = s.ghost !== false; s.invertY = !!s.invertY;
+  if (s.view !== 'fp' && s.view !== 'tp') s.view = 'fp';
+  if (s.quality !== 'high' && s.quality !== 'low') s.quality = 'high';
+  d.settings = s;
+  if (!d.best || typeof d.best !== 'object') d.best = {};
+  for (const k of Object.keys(d.best)) { const b = d.best[k]; if (!b || !isFinite(b.t)) delete d.best[k]; }
+  d.unlocked = clamp(d.unlocked | 0 || 1, 1, 99); d.unlockAll = !!d.unlockAll; d.hintsSeen = !!d.hintsSeen;
+  return d;
+}
+let save = loadSave();
+const settings = save.settings;
+function persist() { Store.set(SAVE_KEY, JSON.stringify(save)); }
+
+// Ghost storage: quantised (cm / milliradians) and delta-encoded flat integer arrays.
+function saveGhost(id, rec, time) {
+  const n = rec.n, b = rec.buf, out = new Array(n * 6);
+  let px = 0, py = 0, pz = 0, pa = 0;
+  for (let i = 0; i < n; i++) {
+    const o = i * 6;
+    out[o] = b[o] - px; out[o + 1] = b[o + 1] - py; out[o + 2] = b[o + 2] - pz; out[o + 3] = b[o + 3] - pa;
+    out[o + 4] = b[o + 4]; out[o + 5] = b[o + 5];
+    px = b[o]; py = b[o + 1]; pz = b[o + 2]; pa = b[o + 3];
+  }
+  return Store.set(GHOST_KEY(id), JSON.stringify({ v: 1, hz: CONFIG.ghost.hz, n, t: time, d: out }));
+}
+function loadGhost(id) {
+  let g = null;
+  try { g = JSON.parse(Store.get(GHOST_KEY(id)) || 'null'); } catch (e) { g = null; }
+  if (!g || g.v !== 1 || g.hz !== CONFIG.ghost.hz || !Array.isArray(g.d) || g.d.length !== g.n * 6 || g.n < 2) return null;
+  const f = new Float32Array(g.n * 6);
+  let x = 0, y = 0, z = 0, a = 0;
+  for (let i = 0; i < g.n; i++) {
+    const o = i * 6;
+    x += g.d[o]; y += g.d[o + 1]; z += g.d[o + 2]; a += g.d[o + 3];
+    f[o] = x / 100; f[o + 1] = y / 100; f[o + 2] = z / 100; f[o + 3] = a / 1000; f[o + 4] = g.d[o + 4]; f[o + 5] = g.d[o + 5] / 100;
+  }
+  return { frames: f, n: g.n, time: g.t };
+}
+
+// ============================================================================
+// AUDIO: everything is synthesised with Web Audio; the context starts on the first gesture.
+// ============================================================================
+const SFX = {
+  ctx: null, master: null, noiseBuf: null, loops: null, on: false,
+  init() {
+    if (this.ctx) { if (this.ctx.state !== 'running') this.ctx.resume().catch(() => {}); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try { this.ctx = new AC(); } catch (e) { return; }
+    const ctx = this.ctx;
+    this.master = ctx.createGain();
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.knee.value = 10; comp.ratio.value = 3; comp.attack.value = 0.003; comp.release.value = 0.2;
+    this.master.connect(comp); comp.connect(ctx.destination);
+    const len = ctx.sampleRate * 2;
+    this.noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = this.noiseBuf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    this.loops = {
+      wind: this.makeLoop('lowpass', 500, 0.7),      // air whoosh tied to speed
+      slide: this.makeLoop('bandpass', 1900, 0.9),   // slide hiss
+      scrape: this.makeLoop('bandpass', 3400, 2.2),  // wall-run scrape
+    };
+    this.on = true;
+    this.applyVolume();
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
+  },
+  applyVolume() { if (!this.master) return; this.master.gain.setTargetAtTime(settings.muted ? 0 : settings.volume, this.ctx.currentTime, 0.03); },
+  makeLoop(type, freq, q) {
+    const ctx = this.ctx, src = ctx.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    const g = ctx.createGain(); g.gain.value = 0;
+    src.connect(f); f.connect(g); g.connect(this.master); src.start();
+    return { src, f, g };
+  },
+  setLoop(name, vol, freq) {
+    if (!this.on) return; const l = this.loops[name], t = this.ctx.currentTime;
+    l.g.gain.setTargetAtTime(vol, t, 0.06); if (freq) l.f.frequency.setTargetAtTime(freq, t, 0.08);
+  },
+  silence() { if (!this.on) return; for (const k in this.loops) this.loops[k].g.gain.setTargetAtTime(0, this.ctx.currentTime, 0.04); },
+  env(g, t, attack, peak, dur) {
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), t + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  },
+  tone(freq, dur, o = {}) {
+    if (!this.on) return; const ctx = this.ctx, t = ctx.currentTime + (o.delay || 0);
+    const osc = ctx.createOscillator(); osc.type = o.type || 'sine'; osc.frequency.setValueAtTime(freq, t);
+    if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t + (o.glide || dur));
+    const g = ctx.createGain(); this.env(g, t, o.attack || 0.004, o.vol || 0.2, dur);
+    osc.connect(g); g.connect(this.master); osc.start(t); osc.stop(t + dur + 0.05);
+  },
+  noise(dur, o = {}) {
+    if (!this.on) return; const ctx = this.ctx, t = ctx.currentTime + (o.delay || 0);
+    const src = ctx.createBufferSource(); src.buffer = this.noiseBuf; src.playbackRate.value = o.rate || 1;
+    const f = ctx.createBiquadFilter(); f.type = o.filter || 'bandpass'; f.frequency.setValueAtTime(o.freq || 1000, t);
+    if (o.to) f.frequency.exponentialRampToValueAtTime(o.to, t + dur); f.Q.value = o.q || 1;
+    const g = ctx.createGain(); this.env(g, t, o.attack || 0.003, o.vol || 0.2, dur);
+    src.connect(f); f.connect(g); g.connect(this.master); src.start(t, Math.random() * 1.5); src.stop(t + dur + 0.05);
+  },
+  // ---- game sounds ----
+  step(speed, wall) {
+    const v = 0.05 + Math.min(speed, 16) * 0.007;
+    this.noise(0.05, { freq: (wall ? 2200 : 1000) + Math.random() * 500, q: 1.3, vol: v });
+    this.tone(85 + Math.random() * 25, 0.07, { to: 48, vol: v * 1.1 });
+  },
+  jump() { this.tone(240, 0.16, { type: 'triangle', to: 520, vol: 0.11 }); this.noise(0.12, { freq: 1200, to: 2600, q: 0.8, vol: 0.05 }); },
+  wallJump() { this.tone(320, 0.18, { type: 'triangle', to: 720, vol: 0.12 }); this.noise(0.1, { freq: 3000, q: 1, vol: 0.08 }); },
+  land(impact) { const v = Math.min(0.32, 0.06 + impact * 0.018); this.tone(150, 0.16, { to: 45, vol: v }); this.noise(0.12, { freq: 700, q: 0.7, vol: v * 0.7, filter: 'lowpass' }); },
+  slide() { this.noise(0.28, { freq: 2600, to: 900, q: 0.8, vol: 0.12 }); },
+  wallStart() { this.noise(0.18, { freq: 4200, to: 2400, q: 2, vol: 0.1 }); },
+  dash() { this.noise(0.32, { freq: 300, to: 4200, q: 1.4, vol: 0.28 }); this.tone(820, 0.22, { type: 'sawtooth', to: 160, vol: 0.05 }); },
+  pad() { this.tone(170, 0.42, { to: 780, glide: 0.3, vol: 0.26 }); this.tone(340, 0.32, { type: 'triangle', to: 1200, vol: 0.07, delay: 0.03 }); },
+  checkpoint() { [880, 1318, 1760].forEach((f, i) => this.tone(f, 0.4, { vol: 0.12, delay: i * 0.07 })); },
+  beep(go) { if (go) { this.tone(1046, 0.55, { type: 'square', vol: 0.09 }); this.tone(523, 0.55, { type: 'triangle', vol: 0.1 }); } else this.tone(523, 0.16, { type: 'square', vol: 0.08 }); },
+  finish() {
+    [523, 659, 784, 1046, 784, 1046].forEach((f, i) => this.tone(f, i === 5 ? 0.8 : 0.22, { type: 'triangle', vol: 0.15, delay: i * 0.1 }));
+    [262, 330, 392].forEach((f, i) => this.tone(f, 0.9, { type: 'square', vol: 0.035, delay: 0.5 + i * 0.01 }));
+  },
+  newBest() { [1046, 1318, 1568, 2093, 2637, 3136].forEach((f, i) => this.tone(f, 0.3, { vol: 0.09, delay: 0.25 + i * 0.06 })); },
+  respawn() { this.tone(520, 0.28, { type: 'triangle', to: 140, vol: 0.13 }); this.noise(0.2, { freq: 600, to: 200, q: 1, vol: 0.06 }); },
+  click() { this.tone(1300, 0.04, { type: 'square', vol: 0.025 }); },
+};
+
+// ============================================================================
+// INPUT: keyboard, mouse (pointer lock) and touch. Edge presses latch until a physics step consumes them.
+// ============================================================================
+const Input = {
+  keys: Object.create(null),
+  moveX: 0, moveY: 0, jumpHeld: false, slideHeld: false,
+  jumpPressed: false, dashPressed: false,
+  lookDX: 0, lookDY: 0,
+  touchMode: false,
+  stick: { id: null, ox: 0, oy: 0, x: 0, y: 0 },
+  look: { id: null, x: 0, y: 0 },
+  tJump: false, tSlide: false,
+  sample() {
+    const k = this.keys;
+    let mx = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0);
+    let my = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0);
+    if (this.stick.id !== null) { mx += this.stick.x; my += this.stick.y; }
+    const m = Math.hypot(mx, my); if (m > 1) { mx /= m; my /= m; }
+    this.moveX = mx; this.moveY = my;
+    this.jumpHeld = !!k.Space || this.tJump;
+    this.slideHeld = !!(k.ShiftLeft || k.ShiftRight || k.KeyC) || this.tSlide;
+  },
+  consume() { this.jumpPressed = false; this.dashPressed = false; },
+  clear() { for (const k in this.keys) this.keys[k] = false; this.tJump = this.tSlide = false; this.stick.id = null; this.look.id = null; this.consume(); this.lookDX = this.lookDY = 0; },
+};
+
+// ============================================================================
+// COURSES: pure data, fed through buildCourse(). Edit freely.
+// Coordinates: the route runs along +Z, X is sideways, Y is up. Start yaw π faces +Z.
+//   P(x, top, z, w, d, t)    platform whose TOP surface is at `top` (w along X, d along Z, t thick)
+//   B(x, bottom, z, w, h, d) box standing on `bottom` (walls, barriers, hazards, hurdles)
+//   opts.ry rotates a box about Y (radians).
+// Jump reference with the default CONFIG (used to design every gap noted below):
+//   full jump on the flat: ≈0.56 s airtime → ≈5.0 m at 9 m/s, ≈7.8 m at 14 m/s,
+//   plus ≈0.7 m of ledge forgiveness from the 0.35 m radius on both edges.
+//   +0.8 m step-up: ≈3.9 m (+0.7) at 9 m/s.   Air dash: ≈3 m extra with no drop.
+//   Wall-run: up to 1.5 s at ≥10.5 m/s, sinking ≈0.4 m over a 12 m wall.
+//   Bounce pad (17 m/s): ≈5.6 m apex.  Slide hitbox 0.9 m tall.
+// MEDAL TIMES ARE TUNABLE: gold ≈ 10-15 % slower than a clean expert run.
+// ============================================================================
+const P = (x, top, z, w, d, t = 1.2, o) => Object.assign({ x, y: top - t / 2, z, w, h: t, d }, o);
+const B = (x, bottom, z, w, h, d, o) => Object.assign({ x, y: bottom + h / 2, z, w, h, d }, o);
+
+const PALETTES = {
+  morning: { skyTop: '#2f8cff', skyHorizon: '#bfe8ff', skyBottom: '#eaf7ff', fog: '#cfeeff', sun: '#fff1d6', hemiSky: '#d9efff', hemiGround: '#8a8fc0',
+    platform: '#7a6bff', wall: '#22c4ff', barrier: '#ffcf33', hazard: '#ff5a36', mover: '#ff6fcf', pad: '#ff3fa4', card: ['#5aa9ff', '#7a6bff'] },
+  dawn: { skyTop: '#ff6fa8', skyHorizon: '#ffd9cc', skyBottom: '#fff1ea', fog: '#ffe2d8', sun: '#fff0dd', hemiSky: '#ffe3ee', hemiGround: '#9a7fb0',
+    platform: '#3f7dff', wall: '#a368ff', barrier: '#ffcf33', hazard: '#ff5a1f', mover: '#22d3ee', pad: '#ff3fa4', card: ['#ff6fa8', '#3f7dff'] },
+  sunset: { skyTop: '#ff7a45', skyHorizon: '#ffe1a8', skyBottom: '#fff4dc', fog: '#ffe9c2', sun: '#fff3d1', hemiSky: '#ffe8cc', hemiGround: '#8c6fa8',
+    platform: '#5b5bea', wall: '#2ab8ff', barrier: '#ffd23f', hazard: '#ff2e4d', mover: '#ff6fcf', pad: '#ff3fa4', card: ['#ff7a45', '#5b5bea'] },
+  teal: { skyTop: '#12aec4', skyHorizon: '#c9fbf3', skyBottom: '#effffb', fog: '#d4faf3', sun: '#fffbe6', hemiSky: '#dcfff8', hemiGround: '#6f8fb0',
+    platform: '#ff6fae', wall: '#4b63ff', barrier: '#ffd23f', hazard: '#ff6a00', mover: '#ffb3d6', pad: '#ff3fa4', card: ['#12aec4', '#ff6fae'] },
+  lilac: { skyTop: '#8a72ff', skyHorizon: '#f1dcff', skyBottom: '#fff4ff', fog: '#efe0ff', sun: '#fff3e6', hemiSky: '#f1e6ff', hemiGround: '#8a7fb5',
+    platform: '#2fa8ff', wall: '#4b63ff', barrier: '#ffd23f', hazard: '#ff5a36', mover: '#7be0ff', pad: '#ff3fa4', card: ['#8a72ff', '#2fa8ff'] },
+  dusk: { skyTop: '#2c2a7a', skyHorizon: '#f4a0bf', skyBottom: '#ffd9c7', fog: '#eab0c8', sun: '#ffd7b8', hemiSky: '#d6c8ff', hemiGround: '#5a4a8a',
+    platform: '#8fc8ff', wall: '#b06bff', barrier: '#ffd23f', hazard: '#ff3b4e', mover: '#ffe066', pad: '#ff3fa4', card: ['#2c2a7a', '#f47fb0'] },
+  golden: { skyTop: '#ffa62e', skyHorizon: '#fff0c4', skyBottom: '#fffaf0', fog: '#fff1cf', sun: '#ffffff', hemiSky: '#fff1d8', hemiGround: '#9b7f9a',
+    platform: '#6c5cff', wall: '#00c2d1', barrier: '#ffd23f', hazard: '#ff3d3d', mover: '#ff6fcf', pad: '#ff3fa4', card: ['#ffa62e', '#6c5cff'] },
+  night: { skyTop: '#0b0930', skyHorizon: '#5b3cc4', skyBottom: '#2a1e6e', fog: '#3d2c8c', sun: '#e2dcff', hemiSky: '#a99cff', hemiGround: '#2a2160',
+    platform: '#e6e3ff', wall: '#36d7ff', barrier: '#ffd23f', hazard: '#ff3d5a', mover: '#ff9ce0', pad: '#ff3fa4', card: ['#1b1660', '#7b4cff'], stars: true },
+};
+
+const FWD = Math.PI, LEFT_X = Math.PI / 2;   // yaw facing +Z, yaw facing -X
+const COURSES = [
+  // --------------------------------------------------------------------------
+  // 1. WARM-UP: straight platforms, simple jumps. Gaps ≤ 3.5 m (≈5.4 m max at 9 m/s) and every
+  //    landing pad is long enough that a full jump at 14 m/s (≈7.8 m) still lands.
+  {
+    id: 'warmup', name: 'Warm-Up', hint: 'Run and jump. Hold Space longer for higher jumps.',
+    palette: 'morning', medals: { gold: 20, silver: 25, bronze: 32 }, // TUNABLE
+    start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
+    platforms: [
+      P(0, 0, 3, 8, 16),                 // start pad            -5..11
+      P(0, 0, 17.5, 6, 8),               // gap 2.5              13.5..21.5
+      P(0, 0, 28, 6, 8),                 // gap 2.5              24..32
+      P(0, 0, 39.5, 6, 10),              // gap 2.5              34.5..44.5
+      B(0, 0, 42.5, 6, 0.6, 0.5),        //   hurdle 0.6 m: land, then hop it
+      P(0, 0.8, 50.5, 6, 8),             // gap 2, +0.8          46.5..54.5
+      P(-1.6, 0.8, 59.75, 3.2, 5.5),     // zig-zag stones, 2.5 m gaps
+      P(1.6, 0.8, 67.75, 3.2, 5.5),
+      P(-1.6, 0.8, 75.75, 3.2, 5.5),
+      P(0, 0.8, 85, 6, 8),               // gap 2.5              81..89
+      P(0, -1.5, 100, 7, 16),            // gap 3, drop 2.3      92..108
+      P(0, -0.7, 112.75, 6, 6.5),        // stairs: +0.8 each, gaps 1.5 / 1 / 1
+      P(0, 0.1, 120.25, 6, 6.5),
+      P(0, 0.9, 127.75, 6, 6.5),
+      P(0, 0.9, 140, 6, 12),             // gap 3                134..146
+      P(2, 0.9, 153.5, 5, 8),            // gap 3.5, jog right   149.5..157.5
+      P(-2, 0.9, 165, 5, 8),             // gap 3.5, jog left    161..169
+      P(0, 0.9, 182, 6, 18),             // gap 4                173..191
+      B(0, 0.9, 180, 6, 0.6, 0.5),       //   hurdle
+      P(0, 1.7, 196, 6, 6),              // gap 2, +0.8          193..199
+      P(0, 1.7, 209, 6, 14),             // gap 3                202..216
+      P(0, 0.9, 223, 6, 10),             // gap 2, drop 0.8      218..228
+      P(2, 0.9, 235.5, 5, 9),            // gap 3, jog right     231..240
+      P(-2, 1.7, 247.5, 5, 9),           // gap 3, +0.8          243..252
+      P(0, 1.7, 263, 6, 16),             // gap 3                255..271
+      B(0, 1.7, 263, 6, 0.6, 0.5),       //   hurdle
+      P(0, 1.7, 283, 10, 16),            // gap 4, finish pad    275..291
+    ],
+    checkpoints: [{ x: 0, y: 0.8, z: 51, w: 6 }, { x: 0, y: -1.5, z: 98, w: 7 }, { x: 0, y: 0.9, z: 140, w: 6 }, { x: 0, y: 1.7, z: 209, w: 6 }],
+    finish: { x: 0, y: 1.7, z: 280, w: 10 },
+  },
+  // --------------------------------------------------------------------------
+  // 2. SKY STEPS: bigger gaps (4.5-5.5 m, ≈5.4 m max at 9 m/s on the flat, more when dropping)
+  //    onto small floating platforms, height changes and two 90° turns.
+  {
+    id: 'skysteps', name: 'Sky Steps', hint: 'Bigger gaps, smaller platforms. Jump from the very edge.',
+    palette: 'dawn', medals: { gold: 26, silver: 33, bronze: 42 }, // TUNABLE
+    start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
+    platforms: [
+      P(0, 0, 4, 8, 18),                 // start                -5..13
+      P(0, 0, 20, 4, 4),                 // gap 5                18..22
+      P(0, 0.6, 28.5, 4, 4),             // gap 4.5, +0.6        26.5..30.5
+      P(2, 0.6, 37, 3.5, 4),             // gap 4.5              35..39
+      P(-1, 0.6, 45.5, 3.5, 4),          // gap 4.5              43.5..47.5
+      P(0, -1, 56, 6, 6),                // gap 5.5, drop 1.6    53..59
+      P(0, -0.2, 64, 4, 3),              // floating stairs: gap 3.5, +0.8 each
+      P(0, 0.6, 70.5, 4, 3),
+      P(0, 1.4, 77, 4, 3),
+      P(0, 1.4, 86, 5, 5),               // gap 5                83.5..88.5
+      P(-2, 1.4, 94.5, 9, 6),            // gap 3, corner: turn right (−X)
+      P(-12.5, 1.4, 94.5, 4, 4),         // gap 4 along −X       x -14.5..-10.5
+      P(-21, 1.4, 94.5, 4, 4),           // gap 4.5
+      P(-29.5, 2.2, 94.5, 4, 4),         // gap 4.5, +0.8
+      P(-38, 2.2, 94.5, 6, 6),           // gap 3.5, corner: turn left (+Z)
+      P(-38, 2.2, 104, 4, 4),            // gap 4.5              102..106
+      P(-36, 2.2, 112.5, 3, 3),          // gap 5                111..114
+      P(-38, 1.2, 121.25, 3, 3.5),       // gap 5.5, drop 1      119.5..123
+      P(-36, 1.2, 129, 3, 3),            // gap 4.5              127.5..130.5
+      P(-37, 1.2, 138, 5, 6),            // gap 4.5              135..141
+      P(-37, 1.2, 148, 4, 4),            // gap 5                146..150
+      P(-37, 0.4, 157.5, 4, 4),          // gap 5.5, drop 0.8    155.5..159.5
+      P(-37, 0.4, 166.5, 5, 6),          // gap 4                163.5..169.5
+      P(-35, 1.2, 175, 3.5, 4),          // gap 3.5, +0.8        173..177
+      P(-38, 2.0, 183, 3.5, 4),          // gap 4, +0.8          181..185
+      P(-36, 2.0, 191.5, 3, 4),          // gap 4.5              189.5..193.5
+      P(-37, 0.5, 202, 4, 5),            // gap 6, drop 1.5      199.5..204.5
+      P(-37, 0.5, 211.5, 3, 4),          // gap 5                209.5..213.5
+      P(-35, 0.5, 220.5, 3, 4),          // gap 5                218.5..222.5
+      P(-36, 0.5, 234, 10, 14),          // gap 4.5, finish pad  227..241
+    ],
+    checkpoints: [{ x: 0, y: -1, z: 56, w: 6 }, { x: -38, y: 2.2, z: 94.5, w: 6, yaw: LEFT_X }, { x: -37, y: 1.2, z: 138, w: 5 }, { x: -37, y: 0.5, z: 202, w: 4 }],
+    finish: { x: -36, y: 0.5, z: 231, w: 10 },
+  },
+  // --------------------------------------------------------------------------
+  // 3. LOW ROAD: slide tunnels and low barriers. Barrier undersides sit 1.05 m above the floor:
+  //    too low to stand (1.8 m) but clear for a slide (0.9 m). Every barrier has ≥4 m of runway
+  //    after the previous landing so there is time to start the slide.
+  {
+    id: 'lowroad', name: 'Low Road', hint: 'Hold Shift or C at speed to slide under the striped barriers.',
+    palette: 'sunset', medals: { gold: 27, silver: 34, bronze: 44 }, // TUNABLE
+    start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
+    platforms: [
+      P(0, 0, 4, 8, 18),                 // start                -5..13
+      P(0, 0, 24, 6, 18),                // gap 2                15..33   barrier @25
+      P(0, 0, 40, 6, 8),                 // gap 3                36..44
+      P(0, 0, 55, 6, 16),                // gap 3                47..63   barriers @53.5 / 59.5
+      P(0, 0, 73, 6, 14),                // gap 3                66..80   tunnel 72..79
+      P(0, 0, 88, 6, 12),                // gap 2                82..94   barrier @90.5, then jump out of the slide
+      P(0, 0, 102, 6, 10),               // gap 3                97..107
+      P(0, 0, 127, 6, 32),               // gap 4                111..143 hurdle / barrier rhythm
+      B(0, 0, 117, 6, 0.6, 0.5),         //   hurdle: jump
+      B(0, 0, 132, 6, 0.6, 0.5),         //   hurdle: jump straight out of the slide
+      P(0, 0, 151, 6, 10),               // gap 3                146..156
+      P(0, 0, 164, 6, 10),               // gap 3                159..169 (tunnel from 163)
+      P(0, -1, 177, 6, 16),              // 1 m step down inside the tunnel   169..185
+      P(0, -1, 191, 6, 8),               // gap 2                187..195
+      P(0, -1, 205, 6, 14),              // gap 3                198..212 barrier @204
+      P(0, -1, 224, 6, 20),              // gap 2                214..234 barrier @223, hurdle @228
+      B(0, -1, 228, 6, 0.6, 0.5),        //   hurdle: jump out of the slide
+      P(0, -1, 245, 6, 16),              // gap 3                237..253 tunnel 243..251
+      P(0, -1, 263, 10, 14),             // gap 3, finish pad    256..270
+    ],
+    barriers: [
+      B(0, 1.05, 25, 6, 1.0, 0.8),
+      B(0, 1.05, 53.5, 6, 1.0, 0.8), B(0, 1.05, 59.5, 6, 1.0, 0.8),  // two in one slide
+      B(0, 1.05, 75.5, 6, 1.5, 7),                                  // tunnel 72..79
+      B(0, 1.05, 90.5, 6, 1.0, 0.8),
+      B(0, 1.05, 126, 6, 1.0, 0.8), B(0, 1.05, 140, 6, 1.0, 0.8),
+      B(0, 1.05, 166, 6, 1.5, 6),                                   // tunnel 163..169, open over the drop,
+      B(0, 0.05, 177, 6, 1.5, 8),                                   //   then low again 173..181
+      B(0, 0.05, 204, 6, 1.0, 0.8),
+      B(0, 0.05, 223, 6, 1.0, 0.8),
+      B(0, 0.05, 247, 6, 1.5, 8),                                   // final tunnel 243..251
+    ],
+    checkpoints: [{ x: 0, y: 0, z: 86, w: 6 }, { x: 0, y: 0, z: 151, w: 6 }, { x: 0, y: -1, z: 191, w: 6 }, { x: 0, y: -1, z: 216, w: 6 }],
+    finish: { x: 0, y: -1, z: 260, w: 10 },
+  },
+  // --------------------------------------------------------------------------
+  // 4. WALL STREET: wall-running. Wall-run speed 10.5 m/s for up to 1.5 s (≈15 m).
+  //    12-14 m gaps are only crossable on the chevron walls. Corridor walls are 4.4 m apart so a
+  //    wall-jump (6.5 m/s out) crosses in ≈0.57 s with almost no height loss.
+  {
+    id: 'wallstreet', name: 'Wall Street', hint: 'Jump at a chevron wall while moving along it to wall-run. Space kicks off.',
+    palette: 'teal', medals: { gold: 24, silver: 30, bronze: 40 }, // TUNABLE
+    start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
+    platforms: [
+      P(0, 0, 4, 8, 18),                 // start                -5..13
+      P(0, 0, 22, 8, 12),                // gap 3                16..28
+      P(0, 0, 46, 8, 12),                // gap 12 (wall right)  40..52
+      P(0, 0, 70, 8, 12),                // gap 12 (wall left)   64..76
+      P(0, 0, 82, 4.4, 8),               // gap 2                78..86
+      P(0, 0, 112, 4.4, 12),             // gap 20 (corridor)    106..118
+      P(0, 0, 123, 8, 4),                // gap 3                121..125
+      P(0, 0, 145, 8, 12),               // gap 14 (wall right)  139..151
+      P(0, 0, 183, 8, 14),               // gap 25 (zig-zag)     176..190
+      P(0, -2, 214, 8, 12),              // gap 18: long right wall, 2 m drop   208..220
+      P(0, -2, 224, 4.4, 6),             // gap 1                221..227
+      P(0, -2, 257, 4.4, 12),            // gap 24: corridor, wall-jump across  251..263
+      P(0, -2, 275, 8, 14),              // gap 5, finish pad    268..282
+    ],
+    walls: [
+      B(-4.5, -4, 34, 1, 10, 18),        // right wall, face x=-4, z 25..43
+      B(4.5, -4, 58, 1, 10, 18),         // left wall, z 49..67
+      B(-2.7, -4, 96, 1, 10, 24), B(2.7, -4, 96, 1, 10, 24),       // corridor, faces ±2.2, z 84..108
+      B(-4.5, -4, 133, 1, 10, 20),       // right wall, z 123..143
+      B(2.7, -4, 157.5, 1, 10, 13), B(-2.7, -4, 168, 1, 10, 14),   // zig-zag: left z 151..164, right z 161..175
+      B(-4.5, -6, 200, 1, 12, 22),       // right wall, z 189..211 (run ≈15 m, then drop onto the next pad)
+      B(-2.7, -6, 239, 1, 12, 24), B(2.7, -6, 239, 1, 12, 24),     // corridor, faces ±2.2, z 227..251
+    ],
+    checkpoints: [{ x: 0, y: 0, z: 70, w: 8 }, { x: 0, y: 0, z: 112, w: 4.4 }, { x: 0, y: 0, z: 145, w: 8 }, { x: 0, y: 0, z: 183, w: 8 }],
+    finish: { x: 0, y: -2, z: 274, w: 8 },
+  },
+  // --------------------------------------------------------------------------
+  // 5. SPRINGBOARD: bounce pads (17 m/s → 5.6 m apex). A pad hit at 9-14 m/s lands 8-13 m ahead
+  //    when rising 4.5 m and 12-19 m ahead when dropping 1.5-2 m, so landings are long.
+  {
+    id: 'springboard', name: 'Springboard', hint: 'Pink pads launch you skyward. Steer (or brake) in the air to land.',
+    palette: 'lilac', medals: { gold: 25, silver: 32, bronze: 42 }, // TUNABLE
+    start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
+    platforms: [
+      P(0, 0, 4, 8, 18),                 // start                -5..13
+      P(0, 0, 20, 6, 8),                 // gap 3                16..24  (pad)
+      P(0, 4, 32, 6, 8),                 // +4                   28..36
+      P(0, 4, 42, 5, 6),                 // gap 3                39..45
+      P(0, 4, 52, 6, 8),                 // gap 3                48..56  (pad)
+      P(0, 8.5, 64, 6, 8),               // +4.5                 60..68
+      P(0, 8.5, 76, 6, 8),               // gap 4                72..80  (pad)
+      P(0, 7, 97, 6, 14),                // pad jump, gap 10, -1.5   90..104 (pad)
+      P(0, 11.5, 109.5, 6, 7),           // +4.5, chain bounce   106..113 (pad)
+      P(0, 16, 120, 6, 6),               // +4.5                 117..123
+      P(0, 14.5, 130, 5, 6),             // gap 4, -1.5          127..133
+      P(0, 13, 140, 5, 6),               // gap 4, -1.5          137..143
+      P(0, 13, 149.5, 6, 7),             // gap 3                146..153 (pad)
+      P(0, 11, 167, 8, 10),              // pad jump, gap 9, -2  162..172 (pad)
+      P(0, 15.5, 180.5, 6, 7),           // +4.5                 177..184
+      P(0, 14, 190.5, 5, 7),             // gap 3, -1.5          187..194
+      P(0, 11, 205, 10, 14),             // gap 4, -3            198..212 (pad)
+      P(0, 15, 221, 6, 8),               // +4                   217..225 (pad)
+      P(0, 12, 240, 8, 12),              // pad jump, -3         234..246 (pad)
+      P(0, 16.5, 253, 6, 8),             // +4.5                 249..257
+      P(0, 13, 266, 10, 14),             // gap 2, -3.5, finish  259..273
+    ],
+    pads: [{ x: 0, y: 0, z: 22 }, { x: 0, y: 4, z: 54 }, { x: 0, y: 8.5, z: 78 }, { x: 0, y: 7, z: 100 }, { x: 0, y: 11.5, z: 110 }, { x: 0, y: 13, z: 151.5 }, { x: 0, y: 11, z: 170.5 },
+      { x: 0, y: 11, z: 209.5 }, { x: 0, y: 15, z: 223 }, { x: 0, y: 12, z: 244 }],
+    checkpoints: [{ x: 0, y: 8.5, z: 64, w: 6 }, { x: 0, y: 16, z: 120, w: 6 }, { x: 0, y: 11, z: 166, w: 8 }, { x: 0, y: 11, z: 204, w: 10 }],
+    finish: { x: 0, y: 13, z: 266, w: 10 },
+  },
+  // --------------------------------------------------------------------------
+  // 6. MACHINE ROOM: moving platforms and spinning bars. Low bars (0.25-0.65 m) are jumped
+  //    (apex 1.1 m); high bars (1.1-1.5 m) must be slid under. Movers carry you.
+  {
+    id: 'machine', name: 'Machine Room', hint: 'Time your hops onto moving platforms. Jump low bars, slide under high ones.',
+    palette: 'dusk', medals: { gold: 34, silver: 43, bronze: 55 }, // TUNABLE
+    start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
+    platforms: [
+      P(0, 0, 4, 8, 18),                 // start                -5..13
+      P(0, 0, 24, 10, 16),               // gap 3, low spinner   16..32
+      P(0, 0, 61.5, 8, 8),               // after 3 lateral movers (gaps 3 / 2.5 / 2.5 / 2.5)   57.5..65.5
+      P(0, 5, 83.5, 8, 16),              // elevator top (+5), gap 3, land, then high spinner   75.5..91.5
+      P(0, 5, 99.5, 8, 12),              // gap 2, low cross spinner                            93.5..105.5
+      P(0, 5, 111.5, 6, 6),              // gap 3                                               108.5..114.5
+      P(0, 5, 138.5, 8, 8),              // after the shuttles (gap 2 at the far end)          134.5..142.5
+      P(0, 5, 167, 10, 12),              // after crossing movers, gap 4, low spinner          161..173
+      P(0, 5, 183, 10, 12),              // gap 4                                              177..189
+      P(0, 5, 211, 8, 10),               // after 2 lateral movers (gaps 2.5 / 2.5 / 2), low cross spinner   206..216
+      P(0, 5, 225.5, 8, 12),             // gap 3.5, high spinner                              219.5..231.5
+      P(0, 5, 241, 10, 12),              // gap 3.5, finish pad                                235..247
+    ],
+    movers: [
+      { box: P(-3, 0, 37.5, 4, 5), move: [6, 0, 0], period: 3.2, phase: 0 },      // lateral stepping stones 35..40
+      { box: P(3, 0, 45, 4, 5), move: [-6, 0, 0], period: 3.2, phase: 0.25 },     //   42.5..47.5
+      { box: P(-3, 0, 52.5, 4, 5), move: [6, 0, 0], period: 3.2, phase: 0.5 },    //   50..55
+      { box: P(-2.5, 0, 70.5, 4, 4), move: [0, 5, 0], period: 4, phase: 0 },      // elevators (opposite phase) 68.5..72.5
+      { box: P(2.5, 0, 70.5, 4, 4), move: [0, 5, 0], period: 4, phase: 0.5 },
+      { box: P(-2.5, 5, 118.5, 4, 4), move: [0, 0, 12], period: 4.5, phase: 0 },  // shuttles across a 20 m gap
+      { box: P(2.5, 5, 118.5, 4, 4), move: [0, 0, 12], period: 4.5, phase: 0.5 },
+      { box: P(-4, 5, 148, 4, 4), move: [8, 0, 0], period: 3, phase: 0 },         // crossing pair 146..150
+      { box: P(4, 5, 155, 4, 4), move: [-8, 0, 0], period: 3, phase: 0.5 },       //               153..157
+      { box: P(-3, 5, 194, 4, 5), move: [6, 0, 0], period: 2.8, phase: 0 },       // lateral pair  191.5..196.5
+      { box: P(3, 5, 201.5, 4, 5), move: [-6, 0, 0], period: 2.8, phase: 0.5 },   //               199..204
+    ],
+    spinners: [
+      { x: 0, y: 0, z: 24, len: 4.6, h0: 0.25, speed: 1.6 },
+      { x: 0, y: 5, z: 85.5, len: 3.6, h0: 1.1, speed: -1.4 },
+      { x: 0, y: 5, z: 99.5, len: 3.8, h0: 0.25, speed: 1.8, bars: 2 },
+      { x: 0, y: 5, z: 167, len: 4.6, h0: 0.25, speed: 2.0 },
+      { x: 0, y: 5, z: 211, len: 3.6, h0: 0.25, speed: -2.2, bars: 2 },
+      { x: 0, y: 5, z: 226, len: 3.6, h0: 1.1, speed: 1.6 },
+    ],
+    checkpoints: [{ x: 0, y: 0, z: 61.5, w: 8 }, { x: 0, y: 5, z: 111.5, w: 6 }, { x: 0, y: 5, z: 138.5, w: 8 }, { x: 0, y: 5, z: 183, w: 10 }],
+    finish: { x: 0, y: 5, z: 242, w: 10 },
+  },
+  // --------------------------------------------------------------------------
+  // 7. SKYLINE: wall-run, wall-jump and dash combined. Jump + dash ≈9.3 m at 9 m/s, so the 8 m
+  //    gaps want a dash. The 3 m chimney gains ≈1 m per wall-jump (cross time ≈0.35 s).
+  {
+    id: 'skyline', name: 'Skyline', hint: 'Dash (E/Q) mid-air across long gaps. Wall-jump side to side to climb the chimney.',
+    palette: 'golden', medals: { gold: 26, silver: 33, bronze: 44 }, // TUNABLE
+    start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
+    platforms: [
+      P(0, 0, 4, 8, 18),                 // start                -5..13
+      P(0, 0, 26, 6, 10),                // gap 8: jump + dash   21..31
+      P(0, 0, 48, 6, 8),                 // gap 13: wall-run     44..52
+      P(-2, 0, 78, 6, 12),               // gap 20: wall-run → wall-jump → dash   72..84
+      P(0, 0, 90, 3, 6),                 // gap 3: chimney floor 87..93
+      P(0, 3.5, 112, 6, 8),              // chimney top, +3.5    108..116
+      P(0, 3.5, 126, 4, 4),              // gap 8 (dash)         124..128
+      P(0, 3.5, 138, 4, 4),              // gap 8 (dash)         136..140
+      P(1, 3.5, 150, 4, 4),              // gap 8 (dash), lined up with the left wall   148..152
+      P(0, 3.5, 186, 8, 12),             // gap 28: zig-zag      180..192
+      P(0, 3.5, 220, 8, 12),             // gap 22: long right wall → wall-jump → dash   214..226
+      P(0, 3.5, 230, 3, 4),              // gap 2: second chimney floor   228..232
+      P(0, 7.5, 254, 6, 8),              // chimney top, +4      250..258
+      P(0, 7.5, 268, 4, 4),              // gap 8 (dash)         266..270
+      P(0, 5.5, 284, 10, 14),            // gap 7, -2, finish    277..291
+    ],
+    walls: [
+      B(-4, -4, 38, 1, 10, 18),          // right wall, face -3.5, z 29..47
+      B(4, -4, 60, 1, 10, 12),           // left wall, z 54..66, then wall-jump + dash
+      B(-2, -2, 100, 1, 12, 16), B(2, -2, 100, 1, 12, 16),          // chimney, faces ±1.5, z 92..108
+      B(2.7, -1, 160, 1, 10, 14), B(-2.7, -1, 171, 1, 10, 14),      // zig-zag: left z 153..167, right z 164..178
+      B(-4.5, -2, 202.5, 1, 12, 19),     // right wall, face -4, z 193..212
+      B(-2, 1.5, 241, 1, 12, 18), B(2, 1.5, 241, 1, 12, 18),        // chimney 2, faces ±1.5, z 232..250
+    ],
+    checkpoints: [{ x: 0, y: 0, z: 48, w: 6 }, { x: 0, y: 3.5, z: 112, w: 6 }, { x: 0, y: 3.5, z: 186, w: 8 }, { x: 0, y: 7.5, z: 254, w: 6 }],
+    finish: { x: 0, y: 5.5, z: 282, w: 10 },
+  },
+  // --------------------------------------------------------------------------
+  // 8. GAUNTLET: everything, back to back, on narrow platforms. Glowing red strips are deadly.
+  {
+    id: 'gauntlet', name: 'Gauntlet', hint: 'Everything you have learned, back to back. Red glows mean death.',
+    palette: 'night', medals: { gold: 40, silver: 50, bronze: 64 }, // TUNABLE
+    start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
+    platforms: [
+      P(0, 0, 4, 6, 18),                 // start                -5..13
+      P(0, 0, 28, 5, 24),                // gap 3                16..40  barrier @25, lava 31.5..33.5
+      P(0, 0, 47, 4, 8),                 // gap 3: low spinner   43..51
+      P(0, 0, 68, 4, 8),                 // gap 13: wall-run     64..72
+      P(0, 0, 91.5, 5, 7),               // after 2 lateral movers (gaps 2.25-2.5), pad   88..95
+      P(0, 4.5, 103.5, 5, 9),            // +4.5: high spinner   99..108
+      P(0, 4.5, 118.5, 4, 5),            // gap 8: dash          116..121
+      P(0, 4.5, 130, 6, 6),              // gap 6                127..133
+      P(0, 4.5, 165, 5, 10),             // gap 27: zig-zag wall-run          160..170
+      P(0, 8.5, 183, 5, 8),              // elevators (+4)       179..187
+      P(0, 8.5, 199, 4, 16),             // gap 4: tunnel 196..203, lava lip 205..207   191..207
+      P(0, 8.5, 212, 4, 7),              // gap 1.5: the hop over the lava lands here    208.5..215.5
+      P(0, 8.5, 229.5, 6, 12),           // gap 8: dash          223.5..235.5
+      P(0, 8.5, 239.5, 3, 4),            // gap 2: chimney floor 237.5..241.5
+      P(0, 12, 264, 5, 8),               // chimney top, +3.5    260..268
+      P(0, 12, 276, 5, 10),              // gap 3: low spinner, then pad   271..281
+      P(0, 16.5, 291, 5, 8),             // +4.5                 287..295
+      P(0, 16.5, 317, 5, 10),            // after 2 lateral movers: barrier @317.5   312..322
+      P(0, 16.5, 347, 6, 10),            // gap 20: wall-run → wall-jump → dash      342..352
+      P(0, 16.5, 364, 10, 12),           // gap 6, finish pad    358..370
+    ],
+    walls: [
+      B(-2.5, -4, 57.5, 1, 10, 16),      // right wall, face -2, z 49.5..65.5
+      B(2.7, 0.5, 141, 1, 10, 14), B(-2.7, 0.5, 152, 1, 10, 14),    // zig-zag: left z 134..148, right z 145..159
+      B(-2, 6.5, 251, 1, 12, 18), B(2, 6.5, 251, 1, 12, 18),        // chimney, faces ±1.5, z 242..260
+      B(-2.5, 12.5, 332, 1, 10, 16),     // right wall, face -2, z 324..340
+    ],
+    barriers: [
+      B(0, 1.05, 25, 5, 1.2, 0.8),
+      B(0, 9.55, 199.5, 4, 1.5, 7),      // tunnel 196..203
+      B(0, 17.55, 317.5, 5, 1.2, 0.8),
+    ],
+    hazards: [
+      B(0, 0, 32.5, 5, 0.25, 2),         // lava strip: jump it
+      B(0, 8.5, 206, 4, 0.25, 2),        // lava lip at the tunnel exit: jump before it
+    ],
+    movers: [
+      { box: P(-2.5, 0, 76.5, 3.5, 4.5), move: [5, 0, 0], period: 2.6, phase: 0 },     // 74.25..78.75
+      { box: P(2.5, 0, 83.5, 3.5, 4.5), move: [-5, 0, 0], period: 2.6, phase: 0.3 },   // 81.25..85.75
+      { box: P(-2, 4.5, 174.5, 3.5, 3.5), move: [0, 4, 0], period: 3, phase: 0 },      // elevators 172.75..176.25
+      { box: P(2, 4.5, 174.5, 3.5, 3.5), move: [0, 4, 0], period: 3, phase: 0.5 },
+      { box: P(-2.5, 16.5, 300, 3.5, 4), move: [5, 0, 0], period: 2.4, phase: 0 },     // 298..302
+      { box: P(2.5, 16.5, 306.5, 3.5, 4), move: [-5, 0, 0], period: 2.4, phase: 0.5 }, // 304.5..308.5
+    ],
+    pads: [{ x: 0, y: 0, z: 93 }, { x: 0, y: 12, z: 279.5 }],
+    spinners: [
+      { x: 0, y: 0, z: 47, len: 2.6, h0: 0.25, speed: 2.2 },
+      { x: 0, y: 4.5, z: 103.5, len: 2.8, h0: 1.1, speed: -2.0 },
+      { x: 0, y: 12, z: 275.5, len: 2.6, h0: 0.25, speed: 2.4 },
+    ],
+    checkpoints: [{ x: 0, y: 0, z: 68, w: 4 }, { x: 0, y: 4.5, z: 165, w: 5 }, { x: 0, y: 8.5, z: 229.5, w: 6 }, { x: 0, y: 16.5, z: 291, w: 5 }],
+    finish: { x: 0, y: 16.5, z: 362, w: 10 },
+  },
+];
+
+// ============================================================================
+// RENDER SETUP: renderer, scene, lights, sky, shared materials and textures.
+// ============================================================================
+const isTouchDevice = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+const canvas = $('game');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.autoClear = false;
+const maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xcfeeff, 90, 420);
+const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.05, 1500);
+camera.rotation.order = 'YXZ';
+scene.add(camera);
+
+const hemi = new THREE.HemisphereLight(0xffffff, 0x888888, 1.55);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+const SUN_DIR = new THREE.Vector3(-0.45, 0.82, 0.36).normalize();
+sun.castShadow = true;
+sun.shadow.mapSize.set(isTouchDevice ? 1024 : CONFIG.render.shadowSize, isTouchDevice ? 1024 : CONFIG.render.shadowSize);
+{ const e = CONFIG.render.shadowExtent, c = sun.shadow.camera; c.left = -e; c.right = e; c.top = e; c.bottom = -e; c.near = 1; c.far = 200; }
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.035;
+scene.add(sun, sun.target);
+
+// Gradient sky dome (follows the camera, drawn first, ignores fog).
+const skyUniforms = { stars: { value: 0 }, top: { value: new THREE.Color() }, horizon: { value: new THREE.Color() }, bottom: { value: new THREE.Color() }, sunDir: { value: SUN_DIR.clone() }, sunColor: { value: new THREE.Color() } };
+const sky = new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), new THREE.ShaderMaterial({
+  uniforms: skyUniforms, side: THREE.BackSide, depthWrite: false, depthTest: false, fog: false,
+  vertexShader: `varying vec3 vDir; void main(){ vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: `uniform vec3 top; uniform vec3 horizon; uniform vec3 bottom; uniform vec3 sunDir; uniform vec3 sunColor; uniform float stars; varying vec3 vDir;
+    float hash(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+    void main(){
+      vec3 d = normalize(vDir); float h = d.y;
+      vec3 c = h > 0.0 ? mix(horizon, top, pow(clamp(h, 0.0, 1.0), 0.6)) : mix(horizon, bottom, pow(clamp(-h, 0.0, 1.0), 0.45));
+      if (stars > 0.0 && h > 0.0) {   // procedural star field for night palettes
+        vec3 cell = floor(d * 180.0); float r = hash(cell);
+        float tw = step(0.9965, r) * smoothstep(0.0, 0.25, h);
+        c += vec3(tw * (0.6 + 0.4 * hash(cell + 7.0))) * stars;
+      }
+      float s = max(dot(d, normalize(sunDir)), 0.0);
+      c += sunColor * (pow(s, 900.0) * 1.4 + pow(s, 14.0) * 0.16);
+      gl_FragColor = vec4(c, 1.0);
+      #include <colorspace_fragment>
+    }`,
+}));
+sky.renderOrder = -10; sky.frustumCulled = false;
+scene.add(sky);
+
+// Procedural textures (white patterns that are tinted by per-vertex colour).
+function canvasTex(size, draw) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d'); draw(g, size);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = maxAniso; return t;
+}
+const TEX = {
+  grid: canvasTex(128, (g, s) => {
+    g.fillStyle = '#fff'; g.fillRect(0, 0, s, s);
+    g.fillStyle = 'rgba(30,20,90,0.11)'; g.fillRect(0, 0, s, 3); g.fillRect(0, 0, 3, s);
+    g.fillStyle = 'rgba(30,20,90,0.045)'; g.fillRect(s / 2 - 1, 0, 2, s); g.fillRect(0, s / 2 - 1, s, 2);
+  }),
+  chevron: canvasTex(128, (g, s) => {
+    g.fillStyle = '#fff'; g.fillRect(0, 0, s, s);
+    g.fillStyle = 'rgba(255,255,255,1)';
+    g.strokeStyle = 'rgba(20,20,80,0.16)'; g.lineWidth = 12; g.lineJoin = 'miter';
+    for (const y0 of [0, s / 2]) { g.beginPath(); g.moveTo(s * 0.3, y0 + s * 0.08); g.lineTo(s * 0.62, y0 + s * 0.25); g.lineTo(s * 0.3, y0 + s * 0.42); g.stroke(); }
+  }),
+  stripes: canvasTex(128, (g, s) => {
+    g.fillStyle = '#fff'; g.fillRect(0, 0, s, s); g.fillStyle = '#2a2550';
+    for (let i = -s; i < s * 2; i += 64) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + 32, 0); g.lineTo(i + 32 - s, s); g.lineTo(i - s, s); g.fill(); }
+  }),
+  curtain: (() => {
+    const t = canvasTex(64, (g, s) => {
+      const gr = g.createLinearGradient(0, 0, 0, s); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.75, 'rgba(255,255,255,0.35)'); gr.addColorStop(1, 'rgba(255,255,255,1)');
+      g.fillStyle = gr; g.fillRect(0, 0, s, s);
+      g.fillStyle = 'rgba(255,255,255,0.5)'; for (let y = 6; y < s; y += 12) g.fillRect(0, y, s, 2);
+      g.fillStyle = 'rgba(255,255,255,1)'; g.fillRect(0, 0, 3, s); g.fillRect(s - 3, 0, 3, s);
+    });
+    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t;
+  })(),
+  hazard: canvasTex(128, (g, s) => {
+    g.fillStyle = '#fff'; g.fillRect(0, 0, s, s); g.fillStyle = 'rgba(90,0,20,0.28)';
+    for (let i = -s; i < s * 2; i += 64) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + 24, 0); g.lineTo(i + 24 - s, s); g.lineTo(i - s, s); g.fill(); }
+  }),
+};
+const MATS = {
+  platform: new THREE.MeshStandardMaterial({ vertexColors: true, map: TEX.grid, roughness: 0.8, metalness: 0 }),
+  wall: new THREE.MeshStandardMaterial({ vertexColors: true, map: TEX.chevron, roughness: 0.45, metalness: 0, emissive: 0x000000 }),
+  barrier: new THREE.MeshStandardMaterial({ vertexColors: true, map: TEX.stripes, roughness: 0.6, metalness: 0 }),
+  hazard: new THREE.MeshStandardMaterial({ vertexColors: true, map: TEX.hazard, roughness: 0.4, metalness: 0, emissive: 0xff3300, emissiveIntensity: 0.5 }),
+};
+
+// ============================================================================
+// LEVEL BUILDER: turns a course definition into merged meshes + collision data.
+// ============================================================================
+let world = null;
+const tmpColor = new THREE.Color();
+
+// Collision box: centre, half extents, yaw. Rotated boxes are handled by moving the player
+// into the box's local XZ frame (see circleVsBox).
+let colliderId = 0;
+function makeCollider(b, kind) {
+  const ry = b.ry || 0;
+  return { id: colliderId++, kind, cx: b.x, cy: b.y, cz: b.z, hx: b.w / 2, hy: b.h / 2, hz: b.d / 2,
+    ry, cos: Math.cos(ry), sin: Math.sin(ry), dx: 0, dy: 0, dz: 0, mover: false };
+}
+
+// Rounded-box generator. Each face is a grid whose outer rows are bent onto quarter-arcs
+// (tan spacing gives even angular steps), producing soft, toy-like bevels. The box is written
+// straight into world space so many boxes can be merged into one draw call.
+const FACES = [
+  { n: [1, 0, 0], u: [0, 1, 0], v: [0, 0, 1] }, { n: [-1, 0, 0], u: [0, 0, 1], v: [0, 1, 0] },
+  { n: [0, 1, 0], u: [0, 0, 1], v: [1, 0, 0] }, { n: [0, -1, 0], u: [1, 0, 0], v: [0, 0, 1] },
+  { n: [0, 0, 1], u: [1, 0, 0], v: [0, 1, 0] }, { n: [0, 0, -1], u: [0, 1, 0], v: [1, 0, 0] },
+];
+function edgeCoords(h, r, seg) {
+  const out = [];
+  for (let k = 0; k <= seg; k++) out.push(-(h - r) - r * Math.tan((Math.PI / 4) * (1 - k / seg)));
+  for (let k = seg; k >= 0; k--) out.push((h - r) + r * Math.tan((Math.PI / 4) * (1 - k / seg)));
+  return out;
+}
+function newAcc() { return { pos: [], nor: [], uv: [], col: [], idx: [] }; }
+function appendRoundedBox(acc, b, colorHex, opts = {}) {
+  const half = [b.w / 2, b.h / 2, b.d / 2];
+  const r = Math.min(opts.bevel ?? CONFIG.render.bevel, half[0] * 0.45, half[1] * 0.45, half[2] * 0.45);
+  const seg = 2, inner = [half[0] - r, half[1] - r, half[2] - r];
+  const ry = b.ry || 0, c = Math.cos(ry), s = Math.sin(ry);
+  const ox = opts.local ? 0 : b.x, oy = opts.local ? 0 : b.y, oz = opts.local ? 0 : b.z;
+  const tile = CONFIG.render.tile;
+  tmpColor.set(colorHex);
+  const cr = tmpColor.r, cg = tmpColor.g, cb = tmpColor.b;
+  const p = [0, 0, 0];
+  for (const f of FACES) {
+    const ai = f.u.indexOf(1), bi = f.v.indexOf(1), ni = f.n[0] ? 0 : f.n[1] ? 1 : 2, ns = f.n[ni];
+    const us = edgeCoords(half[ai], r, seg), vs = edgeCoords(half[bi], r, seg), N = us.length;
+    const base = acc.pos.length / 3;
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      p[ni] = ns * half[ni]; p[ai] = us[i]; p[bi] = vs[j];
+      // clamp into the inner box, push back out by r along the offset → rounded surface
+      const qx = clamp(p[0], -inner[0], inner[0]), qy = clamp(p[1], -inner[1], inner[1]), qz = clamp(p[2], -inner[2], inner[2]);
+      let nx = p[0] - qx, ny = p[1] - qy, nz = p[2] - qz; const len = Math.hypot(nx, ny, nz);
+      if (len > 1e-6) { nx /= len; ny /= len; nz /= len; } else { nx = f.n[0]; ny = f.n[1]; nz = f.n[2]; }
+      const lx = qx + nx * r, ly = qy + ny * r, lz = qz + nz * r;
+      // gentle vertical gradient on the sides, darker undersides
+      let shade = 1;
+      if (ny < -0.5) shade = 0.62; else if (ny < 0.5) shade = 0.8 + 0.2 * ((ly + half[1]) / (2 * half[1]));
+      if (opts.shade) shade *= opts.shade;
+      // world-aligned UVs so grids line up across neighbouring boxes
+      let u, v;
+      if (Math.abs(f.n[1]) > 0.5) { u = (lx + b.x) / tile; v = (lz + b.z) / tile; }
+      else if (Math.abs(f.n[0]) > 0.5) { u = (lz + b.z) / tile; v = (ly + b.y) / tile; }
+      else { u = (lx + b.x) / tile; v = (ly + b.y) / tile; }
+      acc.pos.push(ox + lx * c + lz * s, oy + ly, oz - lx * s + lz * c);
+      acc.nor.push(nx * c + nz * s, ny, -nx * s + nz * c);
+      acc.uv.push(u, v);
+      acc.col.push(cr * shade, cg * shade, cb * shade);
+    }
+    for (let j = 0; j < N - 1; j++) for (let i = 0; i < N - 1; i++) {
+      const a = base + j * N + i, b1 = a + 1, c1 = a + N + 1, d1 = a + N;
+      acc.idx.push(a, b1, c1, a, c1, d1);
+    }
+  }
+}
+function accToGeometry(acc) {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(acc.pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(acc.nor, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(acc.uv, 2));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(acc.col, 3));
+  g.setIndex(acc.pos.length / 3 > 65535 ? new THREE.Uint32BufferAttribute(acc.idx, 1) : new THREE.Uint16BufferAttribute(acc.idx, 1));
+  g.computeBoundingSphere();
+  return g;
+}
+
+// Text banners for gates.
+function labelTexture(text, bg, fg, w = 512, h = 128, checker = false) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
+  g.fillStyle = bg; g.fillRect(0, 0, w, h);
+  if (checker) { const s = h / 4; for (let y = 0; y < 4; y++) for (let x = 0; x < w / s; x++) if ((x + y) % 2 === 0) { g.fillStyle = 'rgba(0,0,0,0.85)'; g.fillRect(x * s, y * s, s, s); } g.fillStyle = 'rgba(255,255,255,0.0)'; }
+  let fs = Math.round(h * 0.62);
+  const font = (px) => `italic 900 ${px}px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`;
+  g.font = font(fs);
+  const maxW = w * (checker ? 0.58 : 0.86);
+  while (fs > 10 && g.measureText(text).width > maxW) { fs -= 2; g.font = font(fs); }   // shrink to fit
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  if (checker) { g.fillStyle = '#ffc23a'; g.fillRect(w * 0.18, h * 0.12, w * 0.64, h * 0.76); }
+  g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.25)'; g.strokeText(text, w / 2, h / 2 + 4);
+  g.fillStyle = fg; g.fillText(text, w / 2, h / 2 + 4);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = maxAniso; return t;
+}
+const SHARED = {
+  post: new THREE.CylinderGeometry(0.2, 0.24, 1, 14),
+  bar: new THREE.BoxGeometry(1, 1, 1),
+  plane: new THREE.PlaneGeometry(1, 1),
+  disc: new THREE.CylinderGeometry(1, 1, 0.16, 28),
+  ring: new THREE.TorusGeometry(1, 0.08, 8, 40),
+  puff: new THREE.IcosahedronGeometry(1, 2),
+};
+const GATE_MATS = {
+  cp: new THREE.MeshStandardMaterial({ color: '#2ee67a', roughness: 0.4, emissive: '#14c45c', emissiveIntensity: 0.25 }),
+  cpOn: new THREE.MeshStandardMaterial({ color: '#7dffb4', roughness: 0.3, emissive: '#2ee67a', emissiveIntensity: 0.9 }),
+  gold: new THREE.MeshStandardMaterial({ color: '#ffc23a', roughness: 0.3, metalness: 0.25, emissive: '#ff9d00', emissiveIntensity: 0.3 }),
+  white: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.5 }),
+  cloud: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, emissive: '#ffffff', emissiveIntensity: 0.28 }),
+};
+const CURTAIN_OPACITY = { cp: 0.45, finish: 0.5, start: 0.55 };
+const CP_TEX = labelTexture('CHECKPOINT', '#2ee67a', '#ffffff');
+const FINISH_TEX = labelTexture('FINISH', '#ffffff', '#1c1640', 512, 128, true);
+const START_TEX = labelTexture('START', '#ffffff', '#1c1640');
+
+function trigger(x, y, z, hw, hh, hd, yaw) {
+  return { cx: x, cy: y, cz: z, hx: hw, hy: hh, hz: hd, cos: Math.cos(yaw), sin: Math.sin(yaw) };
+}
+function pointInTrigger(t, x, y, z) {
+  if (Math.abs(y - t.cy) > t.hy) return false;
+  const dx = x - t.cx, dz = z - t.cz;
+  const lx = t.cos * dx - t.sin * dz, lz = t.sin * dx + t.cos * dz;
+  return Math.abs(lx) <= t.hx && Math.abs(lz) <= t.hz;
+}
+
+function makeGate(group, g, kind) {
+  // kind: 'cp' | 'finish' | 'start'. g.yaw faces along the route; local X spans the path.
+  const root = new THREE.Group(); root.position.set(g.x, g.y, g.z); root.rotation.y = g.yaw;
+  const w = g.w || 6, H = kind === 'cp' ? 3.6 : 4.4;
+  const mat = kind === 'cp' ? GATE_MATS.cp : kind === 'finish' ? GATE_MATS.gold : GATE_MATS.white;
+  const posts = [];
+  for (const sx of [-1, 1]) {
+    const post = new THREE.Mesh(SHARED.post, mat); post.scale.set(1, H, 1); post.position.set(sx * (w / 2 + 0.25), H / 2, 0);
+    post.castShadow = true; root.add(post); posts.push(post);
+  }
+  let banner = null;
+  if (kind === 'finish') {
+    const arch = new THREE.Mesh(new THREE.TorusGeometry(w / 2 + 0.25, 0.26, 10, 40, Math.PI), mat);
+    arch.position.y = H; arch.castShadow = true; root.add(arch);
+    world.disposables.push(arch.geometry);
+  } else {
+    const bar = new THREE.Mesh(SHARED.bar, mat); bar.scale.set(w + 1, 0.32, 0.32); bar.position.y = H; bar.castShadow = true; root.add(bar);
+  }
+  const tex = kind === 'cp' ? CP_TEX : kind === 'finish' ? FINISH_TEX : START_TEX;
+  const bmat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, fog: true });
+  banner = new THREE.Mesh(SHARED.plane, bmat); banner.scale.set(Math.min(w, 5.2), Math.min(w, 5.2) / 4, 1);
+  banner.position.y = H - 0.15 - Math.min(w, 5.2) / 8 - (kind === 'finish' ? 0.35 : 0.1);
+  root.add(banner); world.disposables.push(bmat);
+  // light curtain (soft vertical gradient) so the gate reads from far away without fogging the view
+  const curtainMat = new THREE.MeshBasicMaterial({ color: kind === 'cp' ? '#5dffa0' : kind === 'finish' ? '#ffe27a' : '#9fe9ff', map: TEX.curtain, transparent: true, opacity: CURTAIN_OPACITY[kind], depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false });
+  const curtain = new THREE.Mesh(SHARED.plane, curtainMat); curtain.scale.set(w + 0.3, H - 0.4, 1); curtain.position.y = (H - 0.4) / 2;
+  root.add(curtain); world.disposables.push(curtainMat);
+  group.add(root);
+  return { root, posts, curtain, curtainMat, banner };
+}
+
+function disposeWorld(w) {
+  scene.remove(w.group);
+  w.group.traverse((o) => { if (o.isMesh && o.geometry && !Object.values(SHARED).includes(o.geometry) && !RIG_GEO_SET.has(o.geometry)) o.geometry.dispose(); });
+  for (const d of w.disposables) d.dispose();
+}
+
+function buildCourse(def) {
+  if (world) disposeWorld(world);
+  const pal = PALETTES[def.palette];
+  const W = world = {
+    def, pal, group: new THREE.Group(), disposables: [],
+    solids: [], wallruns: [], hazards: [], movers: [], spinners: [], pads: [], checkpoints: [], finish: null,
+    start: { ...def.start }, killY: def.killY ?? -20, time: 0, bounds: new THREE.Box3(),
+  };
+  scene.add(W.group);
+  const accs = { platform: newAcc(), wall: newAcc(), barrier: newAcc(), hazard: newAcc() };
+  const rng = mulberry32(hashStr(def.id));
+  const addStatic = (b, kind, color) => {
+    const col = makeCollider(b, kind);
+    if (kind === 'hazard') W.hazards.push(col); else W.solids.push(col);
+    if (kind === 'wall') W.wallruns.push(col);
+    appendRoundedBox(accs[kind], b, color, { shade: kind === 'platform' ? 0.94 + rng() * 0.08 : 1 });
+    W.bounds.expandByPoint(new THREE.Vector3(b.x - b.w / 2, b.y - b.h / 2, b.z - b.d / 2));
+    W.bounds.expandByPoint(new THREE.Vector3(b.x + b.w / 2, b.y + b.h / 2, b.z + b.d / 2));
+  };
+  for (const b of def.platforms || []) addStatic(b, 'platform', b.c || pal.platform);
+  for (const b of def.walls || []) addStatic(b, 'wall', pal.wall);
+  for (const b of def.barriers || []) addStatic(b, 'barrier', pal.barrier);
+  for (const b of def.hazards || []) addStatic(b, 'hazard', pal.hazard);
+  MATS.hazard.emissive.set(pal.hazard);
+  MATS.wall.emissive.set(pal.wall).multiplyScalar(0.18);
+  for (const kind of Object.keys(accs)) {
+    if (!accs[kind].pos.length) continue;
+    const mesh = new THREE.Mesh(accToGeometry(accs[kind]), MATS[kind]);
+    mesh.castShadow = true; mesh.receiveShadow = true; W.group.add(mesh);
+  }
+  buildObstacles(W, def, pal);
+
+  // checkpoints / finish / start gate
+  const yawOf = (g) => (g.yaw ?? def.start.yaw);
+  (def.checkpoints || []).forEach((c, i) => {
+    const g = { ...c, yaw: yawOf(c) };
+    const vis = makeGate(W.group, g, 'cp');
+    W.checkpoints.push({ i, x: c.x, y: c.y, z: c.z, yaw: g.yaw, reached: false, vis,
+      trig: trigger(c.x, c.y + 2.2, c.z, (c.w || 6) / 2 + 0.6, 3.2, 1.3, g.yaw) });
+  });
+  { const f = def.finish, g = { ...f, yaw: yawOf(f) };
+    W.finish = { ...g, vis: makeGate(W.group, g, 'finish'), trig: trigger(f.x, f.y + 2.4, f.z, (f.w || 8) / 2 + 0.6, 3.6, 1.4, g.yaw) }; }
+  { const s = def.start; const fx = -Math.sin(s.yaw), fz = -Math.cos(s.yaw);
+    W.startGate = makeGate(W.group, { x: s.x + fx * 2, y: s.y, z: s.z + fz * 2, w: def.startW || 7, yaw: s.yaw }, 'start'); }
+
+  buildDecor(W, def, pal, rng);
+  applyPalette(pal);
+  resetObstacles(W);
+  return W;
+}
+
+function applyPalette(pal) {
+  skyUniforms.top.value.set(pal.skyTop); skyUniforms.horizon.value.set(pal.skyHorizon); skyUniforms.bottom.value.set(pal.skyBottom);
+  skyUniforms.sunColor.value.set(pal.sun); skyUniforms.stars.value = pal.stars ? 1 : 0;
+  scene.fog.color.set(pal.fog);
+  hemi.color.set(pal.hemiSky); hemi.groundColor.set(pal.hemiGround);
+  sun.color.set(pal.sun);
+  renderer.setClearColor(pal.fog);
+  document.querySelector('meta[name=theme-color]').setAttribute('content', pal.skyTop);
+}
+
+// Clouds and distant islands; purely visual, seeded per course so they never change.
+function buildDecor(W, def, pal, rng) {
+  const bb = W.bounds, cx = (bb.min.x + bb.max.x) / 2, cz = (bb.min.z + bb.max.z) / 2;
+  const radius = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z) / 2 + 30;
+  const puffs = [];
+  const clusters = 26;
+  for (let i = 0; i < clusters; i++) {
+    const a = rng() * TAU, d = radius + 20 + rng() * 170;
+    const below = rng() < 0.45;
+    const x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d * 0.9;
+    const y = below ? W.killY - 6 - rng() * 30 : bb.min.y + rng() * 50 - 5;
+    const n = 4 + Math.floor(rng() * 5), sc = 3 + rng() * 6;
+    for (let k = 0; k < n; k++) puffs.push([x + (rng() - 0.5) * sc * 3, y + (rng() - 0.3) * sc * 0.6, z + (rng() - 0.5) * sc * 1.6, sc * (0.6 + rng() * 0.6)]);
+  }
+  // a soft cloud floor far below the course
+  for (let i = 0; i < 40; i++) {
+    const x = cx + (rng() - 0.5) * (radius * 2 + 160), z = cz + (rng() - 0.5) * (radius * 2 + 160);
+    puffs.push([x, W.killY - 18 - rng() * 6, z, 8 + rng() * 10]);
+  }
+  const inst = new THREE.InstancedMesh(SHARED.puff, GATE_MATS.cloud, puffs.length);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
+  puffs.forEach((pf, i) => { p.set(pf[0], pf[1], pf[2]); s.set(pf[3] * 1.3, pf[3] * 0.62, pf[3]); m.compose(p, q, s); inst.setMatrixAt(i, m); });
+  inst.instanceMatrix.needsUpdate = true; W.group.add(inst); W.disposables.push(inst);
+  // distant floating islands for depth
+  const iacc = newAcc();
+  for (let i = 0; i < 14; i++) {
+    const a = rng() * TAU, d = radius + 70 + rng() * 200, w = 8 + rng() * 20, h = 3 + rng() * 10;
+    appendRoundedBox(iacc, { x: cx + Math.cos(a) * d, y: bb.min.y - 10 + rng() * 40, z: cz + Math.sin(a) * d, w, h, d: w * (0.6 + rng() * 0.8), ry: rng() * TAU }, pal.platform, { bevel: 1.2, shade: 0.75 });
+  }
+  const isl = new THREE.Mesh(accToGeometry(iacc), MATS.platform); isl.receiveShadow = false; W.group.add(isl);
+}
+
+// ============================================================================
+// OBSTACLES: moving platforms, spinning bars, bounce pads.
+// ============================================================================
+function buildObstacles(W, def, pal) {
+  // Moving platforms ping-pong (smoothly) between box and box + move over `period` seconds.
+  for (const m of def.movers || []) {
+    const b = m.box, col = makeCollider(b, 'platform'); col.mover = true;
+    const acc = newAcc(); appendRoundedBox(acc, { ...b, x: 0, y: 0, z: 0, ry: 0 }, pal.mover, {});
+    const mesh = new THREE.Mesh(accToGeometry(acc), MATS.platform); mesh.castShadow = mesh.receiveShadow = true; W.group.add(mesh);
+    // rail showing the path
+    const len = Math.hypot(m.move[0], m.move[1], m.move[2]);
+    const railMat = new THREE.MeshBasicMaterial({ color: pal.mover, transparent: true, opacity: 0.35, depthWrite: false });
+    const rail = new THREE.Mesh(SHARED.bar, railMat); rail.scale.set(0.12, 0.12, len);
+    rail.position.set(b.x + m.move[0] / 2, b.y - b.h / 2 - 0.25 + m.move[1] / 2, b.z + m.move[2] / 2);
+    rail.lookAt(b.x + m.move[0], b.y - b.h / 2 - 0.25 + m.move[1], b.z + m.move[2]);
+    W.group.add(rail); W.disposables.push(railMat);
+    W.solids.push(col);
+    W.movers.push({ col, mesh, ox: b.x, oy: b.y, oz: b.z, mx: m.move[0], my: m.move[1], mz: m.move[2], period: m.period || 4, phase: m.phase || 0 });
+    W.bounds.expandByPoint(new THREE.Vector3(b.x, b.y, b.z)); W.bounds.expandByPoint(new THREE.Vector3(b.x + m.move[0], b.y + m.move[1], b.z + m.move[2]));
+  }
+  // Spinners: a solid post with deadly bars sweeping at height h0 above the base.
+  for (const s of def.spinners || []) {
+    const sp = { x: s.x, y: s.y, z: s.z, len: s.len || 4, h0: s.h0 ?? 0.5, thick: s.thick || 0.4, speed: s.speed || 1.6, bars: s.bars || 1, phase: s.phase || 0 };
+    const grp = new THREE.Group(); grp.position.set(sp.x, sp.y, sp.z);
+    const postMat = new THREE.MeshStandardMaterial({ color: '#2a2550', roughness: 0.5 }); W.disposables.push(postMat);
+    const post = new THREE.Mesh(SHARED.post, postMat); post.scale.set(1.6, sp.h0 + sp.thick + 0.4, 1.6); post.position.y = (sp.h0 + sp.thick + 0.4) / 2; post.castShadow = true; grp.add(post);
+    W.solids.push(makeCollider({ x: sp.x, y: sp.y + (sp.h0 + sp.thick + 0.4) / 2, z: sp.z, w: 0.7, h: sp.h0 + sp.thick + 0.4, d: 0.7 }, 'platform'));
+    const rot = new THREE.Group(); rot.position.y = sp.h0 + sp.thick / 2; grp.add(rot);
+    for (let k = 0; k < sp.bars; k++) {
+      const acc = newAcc(); appendRoundedBox(acc, { x: 0, y: 0, z: 0, w: sp.len * 2, h: sp.thick, d: sp.thick }, pal.hazard, { bevel: sp.thick * 0.45 });
+      const bar = new THREE.Mesh(accToGeometry(acc), MATS.hazard); bar.rotation.y = -k * Math.PI / sp.bars; bar.castShadow = true; rot.add(bar);
+    }
+    W.group.add(grp);
+    sp.rot = rot; W.spinners.push(sp);
+  }
+  // Bounce pads: glowing discs; the platform underneath is a normal platform.
+  for (const p of def.pads || []) {
+    const padMat = new THREE.MeshStandardMaterial({ color: pal.pad, emissive: pal.pad, emissiveIntensity: 0.55, roughness: 0.35 }); W.disposables.push(padMat);
+    const grp = new THREE.Group(); grp.position.set(p.x, p.y, p.z);
+    const disc = new THREE.Mesh(SHARED.disc, padMat); disc.scale.set(1, 1, 1); disc.position.y = 0.08; disc.receiveShadow = true; grp.add(disc);
+    const ring = new THREE.Mesh(SHARED.ring, GATE_MATS.white); ring.rotation.x = Math.PI / 2; ring.position.y = 0.17; ring.scale.setScalar(0.75); grp.add(ring);
+    const arrowMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.7, depthWrite: false }); W.disposables.push(arrowMat);
+    const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.5, 4), arrowMat); arrow.position.y = 0.9; grp.add(arrow); W.disposables.push(arrow.geometry);
+    W.group.add(grp);
+    W.pads.push({ x: p.x, y: p.y, z: p.z, r: p.r || 1.05, power: p.power || CONFIG.pad.power, grp, disc, arrow, bounce: 0 });
+  }
+}
+
+function updateMovers(W, t) {
+  for (const m of W.movers) {
+    const s = 0.5 - 0.5 * Math.cos((t / m.period + m.phase) * TAU);
+    const nx = m.ox + m.mx * s, ny = m.oy + m.my * s, nz = m.oz + m.mz * s, c = m.col;
+    c.dx = nx - c.cx; c.dy = ny - c.cy; c.dz = nz - c.cz; c.cx = nx; c.cy = ny; c.cz = nz;
+  }
+}
+function resetObstacles(W) {
+  W.time = 0; updateMovers(W, 0);
+  for (const m of W.movers) { m.col.dx = m.col.dy = m.col.dz = 0; }
+  for (const cp of W.checkpoints) setCheckpointVisual(cp, false);
+  if (W.startGate) W.startGate.curtainMat.opacity = CURTAIN_OPACITY.start;
+}
+function setCheckpointVisual(cp, on) {
+  cp.reached = on;
+  for (const p of cp.vis.posts) p.material = on ? GATE_MATS.cpOn : GATE_MATS.cp;
+  cp.vis.curtainMat.opacity = on ? 0.12 : CURTAIN_OPACITY.cp;
+}
+// Visual-only obstacle update at the interpolated render time.
+function renderObstacles(W, rt, dt) {
+  for (const m of W.movers) {
+    const s = 0.5 - 0.5 * Math.cos((rt / m.period + m.phase) * TAU);
+    m.mesh.position.set(m.ox + m.mx * s, m.oy + m.my * s, m.oz + m.mz * s);
+  }
+  for (const s of W.spinners) s.rot.rotation.y = -(s.phase + s.speed * rt);
+  for (const p of W.pads) {
+    p.bounce = Math.max(0, p.bounce - dt * 3);
+    const k = Math.sin(p.bounce * Math.PI) * 0.35;
+    p.disc.scale.set(1 + k, 1 - k * 2, 1 + k);
+    p.arrow.position.y = 0.9 + Math.sin(rt * 4) * 0.12;
+  }
+  MATS.hazard.emissiveIntensity = 0.45 + 0.25 * Math.sin(rt * 5);
+}
+
+// ============================================================================
+// PHYSICS / PLAYER: custom kinematic controller (vertical cylinder vs. boxes).
+// ============================================================================
+const ANIM = { IDLE: 0, RUN: 1, UP: 2, FALL: 3, SLIDE: 4, CROUCH: 5, WALL_L: 6, WALL_R: 7, DASH: 8 };
+const Pl = {
+  pos: new THREE.Vector3(), prev: new THREE.Vector3(), vel: new THREE.Vector3(),
+  yaw: Math.PI, pitch: -0.08, facing: Math.PI, height: 1.8,
+  grounded: false, groundBox: null, coyote: 0, jumpBuffer: 0, dashBuffer: 0, jumping: false,
+  topSpeed: 9, sinceLand: 1, airTime: 0,
+  sliding: false, crouched: false, slideTime: 0, lastSlideAt: -99,
+  wallRun: false, wallBox: null, wallNX: 0, wallNZ: 0, wallTime: 0, lastWall: null, wallCooldown: 0,
+  dashAvail: true, dashTime: 0, dashDX: 0, dashDZ: 0, dashPre: 0,
+  padLock: 0, anim: 0, phase: 0, wallSide: 0, lastGroundY: 0,
+};
+// Events raised during a physics step, consumed by audio / FX once per frame (no allocation).
+const events = [];
+const emit = (type, a = 0, b = 0) => { events.push(type, a, b); };
+
+function resetPlayer(sp) {
+  Pl.pos.set(sp.x, sp.y + 0.001, sp.z); Pl.prev.copy(Pl.pos); Pl.vel.set(0, 0, 0);
+  Pl.yaw = sp.yaw; Pl.facing = sp.yaw; Pl.pitch = -0.08; Pl.height = CONFIG.player.standHeight;
+  Pl.grounded = false; Pl.groundBox = null; Pl.coyote = 0; Pl.jumpBuffer = 0; Pl.dashBuffer = 0; Pl.jumping = false;
+  Pl.topSpeed = CONFIG.move.runSpeed; Pl.sinceLand = 1; Pl.airTime = 0;
+  Pl.sliding = false; Pl.crouched = false; Pl.slideTime = 0; Pl.lastSlideAt = -99;
+  Pl.wallRun = false; Pl.wallBox = null; Pl.wallTime = 0; Pl.lastWall = null; Pl.wallCooldown = 0;
+  Pl.dashAvail = true; Pl.dashTime = 0; Pl.padLock = 0; Pl.anim = 0; Pl.phase = 0; Pl.lastGroundY = sp.y;
+}
+
+// Circle (player cross-section) vs. a yaw-rotated rectangle (box cross-section).
+// Writes the world-space push-out normal and penetration depth into _c.
+const _c = { nx: 0, nz: 0, pen: 0 };
+function circleVsBox(b, x, z, r) {
+  const dx = x - b.cx, dz = z - b.cz;
+  const lx = b.cos * dx - b.sin * dz, lz = b.sin * dx + b.cos * dz;    // into box-local frame
+  const qx = clamp(lx, -b.hx, b.hx), qz = clamp(lz, -b.hz, b.hz);      // closest point on the rectangle
+  const ex = lx - qx, ez = lz - qz, d2 = ex * ex + ez * ez;
+  let nlx, nlz, pen;
+  if (d2 > 1e-12) {
+    if (d2 >= r * r) return false;
+    const d = Math.sqrt(d2); nlx = ex / d; nlz = ez / d; pen = r - d;
+  } else {
+    // centre is inside the rectangle: leave through the nearest side
+    const px = b.hx - Math.abs(lx), pz = b.hz - Math.abs(lz);
+    if (px < pz) { nlx = lx >= 0 ? 1 : -1; nlz = 0; pen = px + r; } else { nlx = 0; nlz = lz >= 0 ? 1 : -1; pen = pz + r; }
+  }
+  _c.nx = b.cos * nlx + b.sin * nlz; _c.nz = -b.sin * nlx + b.cos * nlz; _c.pen = pen;   // back to world
+  return true;
+}
+function overlapsSolid(x, y, z, h, r) {
+  for (const b of world.solids) {
+    if (y >= b.cy + b.hy - 0.001 || y + h <= b.cy - b.hy + 0.001) continue;
+    if (circleVsBox(b, x, z, r)) return true;
+  }
+  return false;
+}
+const canStand = () => !overlapsSolid(Pl.pos.x, Pl.pos.y + 0.02, Pl.pos.z, CONFIG.player.standHeight - 0.02, CONFIG.player.radius - 0.02);
+
+// Collision resolution. Vertical and horizontal motion are resolved in separate passes:
+//  1) move Y, then for every overlapping box decide by where the feet/head were *before* the move
+//     whether this is a landing (feet were above the top) or a head bump (head was below the bottom);
+//     anything else is a side contact and is left for pass 2. This avoids snagging on edges.
+//  2) move XZ and push the circle out of each overlapping box along the shortest direction
+//     (rounded corners for free), removing the velocity component into the surface.
+//     Small ledges (≤ stepHeight) are stepped onto while grounded; while airborne and not rising
+//     fast, ledges up to ledgeAssist are mantled so near-misses land instead of sliding down the side.
+function moveAndCollide(dt) {
+  const r = CONFIG.player.radius, solids = world.solids;
+  const prevFeet = Pl.pos.y, prevHead = Pl.pos.y + Pl.height;
+  Pl.pos.y += Pl.vel.y * dt;
+  Pl.grounded = false; Pl.groundBox = null;
+  for (const b of solids) {
+    const top = b.cy + b.hy, bot = b.cy - b.hy;
+    if (Pl.pos.y >= top || Pl.pos.y + Pl.height <= bot) continue;
+    if (!circleVsBox(b, Pl.pos.x, Pl.pos.z, r - 0.01)) continue;
+    if (Pl.vel.y <= 0 && prevFeet >= top - 0.02 - Math.max(0, b.dy)) {
+      Pl.pos.y = top; Pl.vel.y = 0; Pl.grounded = true; Pl.groundBox = b;
+    } else if (Pl.vel.y > 0 && prevHead <= bot + 0.02 + Math.max(0, -b.dy)) {
+      Pl.pos.y = bot - Pl.height; Pl.vel.y = 0; Pl.jumping = false;
+    }
+  }
+  Pl.pos.x += Pl.vel.x * dt; Pl.pos.z += Pl.vel.z * dt;
+  for (let iter = 0; iter < 3; iter++) {
+    let hit = false;
+    for (const b of solids) {
+      const top = b.cy + b.hy, bot = b.cy - b.hy;
+      if (Pl.pos.y >= top - 0.001 || Pl.pos.y + Pl.height <= bot + 0.001) continue;
+      if (!circleVsBox(b, Pl.pos.x, Pl.pos.z, r)) continue;
+      const stepUp = Pl.grounded ? CONFIG.player.stepHeight : (b.kind !== 'wall' && Pl.vel.y < 3 ? CONFIG.player.ledgeAssist : 0);
+      if (top - Pl.pos.y <= stepUp && !overlapsSolid(Pl.pos.x, top + 0.01, Pl.pos.z, Pl.height, r - 0.02)) {
+        Pl.pos.y = top; Pl.groundBox = b;              // step up / mantle
+        if (!Pl.grounded) { Pl.grounded = true; Pl.vel.y = 0; }
+        continue;
+      }
+      Pl.pos.x += _c.nx * _c.pen; Pl.pos.z += _c.nz * _c.pen;
+      const vn = Pl.vel.x * _c.nx + Pl.vel.z * _c.nz;
+      if (vn < 0) { Pl.vel.x -= _c.nx * vn; Pl.vel.z -= _c.nz * vn; }
+      hit = true;
+    }
+    if (!hit) break;
+  }
+}
+
+function accelerateTo(tx, tz, a, dt) {
+  const dx = tx - Pl.vel.x, dz = tz - Pl.vel.z, d = Math.hypot(dx, dz), m = a * dt;
+  if (d <= m) { Pl.vel.x = tx; Pl.vel.z = tz; } else { Pl.vel.x += (dx / d) * m; Pl.vel.z += (dz / d) * m; }
+}
+function applyGravity(dt, jumpHeld, scale) {
+  const J = CONFIG.jump; let g = J.gravity * scale;
+  if (Pl.vel.y <= 0) { Pl.jumping = false; g *= J.fallMult; }
+  else if (Pl.jumping && !jumpHeld) g *= J.cutMult;   // released early → short hop
+  Pl.vel.y = Math.max(Pl.vel.y - g * dt, -J.maxFall);
+}
+
+// Wall-run detection: find the closest wall-run box whose *flat face* (not a corner) is within
+// radius + probe of the player and which overlaps the body vertically. Returns the outward normal.
+const _probe = { box: null, nx: 0, nz: 0, dist: 0 };
+function probeWall(only) {
+  const reach = CONFIG.player.radius + CONFIG.wallRun.probe, feet = Pl.pos.y;
+  let best = null, bestD = Infinity, bnx = 0, bnz = 0;
+  for (const b of world.wallruns) {
+    if (only && b !== only) continue;
+    const top = b.cy + b.hy, bot = b.cy - b.hy;
+    if (feet > top - CONFIG.wallRun.topMargin || feet + 1.2 < bot) continue;
+    const dx = Pl.pos.x - b.cx, dz = Pl.pos.z - b.cz;
+    const lx = b.cos * dx - b.sin * dz, lz = b.sin * dx + b.cos * dz;
+    const ox = Math.abs(lx) - b.hx, oz = Math.abs(lz) - b.hz;
+    let nlx = 0, nlz = 0, d;
+    if (ox > -0.05 && oz <= 0) { d = ox; nlx = lx >= 0 ? 1 : -1; }
+    else if (oz > -0.05 && ox <= 0) { d = oz; nlz = lz >= 0 ? 1 : -1; }
+    else continue;                                   // corner region: no clean surface to run on
+    if (d > reach || d >= bestD) continue;
+    bestD = d; best = b; bnx = b.cos * nlx + b.sin * nlz; bnz = -b.sin * nlx + b.cos * nlz;
+  }
+  if (!best) return null;
+  _probe.box = best; _probe.nx = bnx; _probe.nz = bnz; _probe.dist = bestD;
+  return _probe;
+}
+
+function tryGroundJump() {
+  if ((Pl.sliding || Pl.crouched || Pl.height < CONFIG.player.standHeight) && !canStand()) return false;
+  if (Pl.sliding) Pl.sliding = false;
+  Pl.crouched = false; Pl.height = CONFIG.player.standHeight;
+  Pl.vel.y = CONFIG.jump.velocity;
+  Pl.grounded = false; Pl.groundBox = null; Pl.coyote = 0; Pl.jumpBuffer = 0; Pl.jumping = true;
+  if (Pl.sinceLand < CONFIG.move.bhopWindow) Pl.topSpeed = Math.min(CONFIG.move.maxRunSpeed, Pl.topSpeed + CONFIG.move.bhopBoost);
+  emit('jump');
+  return true;
+}
+function startSlide(hs) {
+  const S = CONFIG.slide;
+  Pl.sliding = true; Pl.slideTime = 0; Pl.height = CONFIG.player.slideHeight;
+  const boosted = world.time - Pl.lastSlideAt >= S.cooldown;
+  Pl.lastSlideAt = world.time;
+  const sp = boosted ? Math.max(hs, Math.min(hs + S.boost, S.maxBoostedSpeed)) : hs;
+  Pl.vel.x *= sp / hs; Pl.vel.z *= sp / hs;
+  emit('slide');
+}
+function endSlide(stillHeld) {
+  Pl.sliding = false;
+  if (!stillHeld && canStand()) { Pl.crouched = false; Pl.height = CONFIG.player.standHeight; }
+  else { Pl.crouched = true; Pl.height = CONFIG.player.slideHeight; }
+}
+function detachWall() {
+  Pl.wallRun = false; Pl.lastWall = Pl.wallBox; Pl.wallBox = null; Pl.wallCooldown = CONFIG.wallRun.cooldown;
+}
+function wallJump(box, nx, nz) {
+  const WJ = CONFIG.wallJump, vn = Pl.vel.x * nx + Pl.vel.z * nz;
+  Pl.vel.x += nx * (WJ.out - vn); Pl.vel.z += nz * (WJ.out - vn);   // keep speed along the wall, kick outwards
+  Pl.vel.y = WJ.up;
+  Pl.wallRun = false; Pl.wallBox = null; Pl.lastWall = box; Pl.wallCooldown = CONFIG.wallRun.cooldown;
+  Pl.jumpBuffer = 0; Pl.jumping = true; Pl.dashAvail = true; Pl.coyote = 0;
+  emit('walljump');
+}
+function startDash() {
+  const D = CONFIG.dash;
+  if (Pl.wallRun) detachWall();
+  Pl.dashDX = -Math.sin(Pl.yaw); Pl.dashDZ = -Math.cos(Pl.yaw);
+  Pl.dashPre = Math.hypot(Pl.vel.x, Pl.vel.z);
+  Pl.dashTime = D.duration; Pl.dashAvail = false; Pl.dashBuffer = 0; Pl.jumping = false;
+  emit('dash');
+}
+
+function groundMove(dt, wdx, wdz, wmag, slideHeld) {
+  const M = CONFIG.move, S = CONFIG.slide;
+  Pl.coyote = CONFIG.jump.coyote; Pl.dashAvail = true; Pl.lastWall = null;
+  const vx = Pl.vel.x, vz = Pl.vel.z, hs = Math.hypot(vx, vz);
+  if (slideHeld && !Pl.sliding && !Pl.crouched) {
+    if (hs >= S.minEntrySpeed) startSlide(hs); else { Pl.crouched = true; Pl.height = CONFIG.player.slideHeight; }
+  }
+  if (Pl.sliding) {
+    Pl.slideTime += dt;
+    const h2 = Math.hypot(Pl.vel.x, Pl.vel.z), sp = Math.max(0, h2 - S.friction * dt);
+    let dx = h2 > 1e-4 ? Pl.vel.x / h2 : -Math.sin(Pl.yaw), dz = h2 > 1e-4 ? Pl.vel.z / h2 : -Math.cos(Pl.yaw);
+    if (wmag > 0.1) {           // limited steering while sliding
+      const ang = Math.atan2(dx * wdz - dz * wdx, dx * wdx + dz * wdz);
+      const turn = clamp(ang, -S.steer * dt, S.steer * dt), c = Math.cos(turn), s = Math.sin(turn);
+      const ndx = dx * c - dz * s; dz = dx * s + dz * c; dx = ndx;
+    }
+    Pl.vel.x = dx * sp; Pl.vel.z = dz * sp;
+    // releasing the key ends the slide, except under a low ceiling where you keep your momentum
+    if (sp < S.endSpeed || (!slideHeld && Pl.slideTime >= S.minTime && canStand())) endSlide(slideHeld);
+  } else if (Pl.crouched) {
+    accelerateTo(wdx * S.crouchSpeed * wmag, wdz * S.crouchSpeed * wmag, M.groundAccel, dt);
+    if (!slideHeld && canStand()) { Pl.crouched = false; Pl.height = CONFIG.player.standHeight; }
+  } else if (wmag > 0.05) {
+    const dot = hs > 1 ? (vx * wdx + vz * wdz) / hs : 1;
+    if (dot > 0.95 && hs >= Pl.topSpeed - 0.75 && wmag > 0.9) Pl.topSpeed = Math.min(M.maxRunSpeed, Pl.topSpeed + M.buildRate * dt);
+    else if (dot < M.hardTurnDot) Pl.topSpeed = Math.max(M.runSpeed, Pl.topSpeed - M.turnDecay * dt);
+    let target = Pl.topSpeed * wmag;
+    if (hs > target && dot > 0.7) target = Math.max(target, hs - M.overspeedDecay * dt);   // keep bonus momentum
+    accelerateTo(wdx * target, wdz * target, M.groundAccel, dt);
+  } else {
+    Pl.topSpeed = Math.max(M.runSpeed, Pl.topSpeed - M.idleDecay * dt);
+    accelerateTo(0, 0, M.groundDecel, dt);
+  }
+  Pl.vel.y = -CONFIG.jump.groundStick;
+  if (Pl.jumpBuffer > 0) tryGroundJump();
+}
+
+function airMove(dt, wdx, wdz, wmag, slideHeld, jumpHeld) {
+  const M = CONFIG.move;
+  if (Pl.sliding) Pl.sliding = false;
+  if (slideHeld) Pl.height = CONFIG.player.slideHeight;   // tuck: hold slide mid-air to shrink the hitbox
+  else if (Pl.height < CONFIG.player.standHeight && canStand()) { Pl.height = CONFIG.player.standHeight; Pl.crouched = false; }
+  Pl.coyote -= dt;
+  if (wmag > 0.05) {
+    // Air steering can redirect and reach run speed, but never adds speed above what you have.
+    const hs = Math.hypot(Pl.vel.x, Pl.vel.z), cap = Math.max(hs, M.runSpeed);
+    accelerateTo(wdx * cap, wdz * cap, M.airAccel * wmag, dt);
+  }
+  if (Pl.jumpBuffer > 0) {
+    if (Pl.coyote > 0) tryGroundJump();
+    else { const hit = probeWall(null); if (hit && hit.box !== Pl.lastWall) wallJump(hit.box, hit.nx, hit.nz); }
+  }
+  if (Pl.dashBuffer > 0 && Pl.dashAvail) { startDash(); dashMove(dt); return; }
+  applyGravity(dt, jumpHeld, 1);
+  if (Pl.wallCooldown <= 0) tryWallAttach(wdx, wdz, wmag);
+}
+
+function tryWallAttach(wdx, wdz, wmag) {
+  const W = CONFIG.wallRun;
+  if (wmag < 0.2) return;
+  const hit = probeWall(null);
+  if (!hit || hit.box === Pl.lastWall) return;
+  const nx = hit.nx, nz = hit.nz, vn = Pl.vel.x * nx + Pl.vel.z * nz;
+  const ts = Math.hypot(Pl.vel.x - nx * vn, Pl.vel.z - nz * vn);
+  if (ts < W.minSpeed || vn > 1.0 || wdx * nx + wdz * nz > 0.3) return;   // too slow, leaving, or steering away
+  Pl.wallRun = true; Pl.wallBox = hit.box; Pl.wallNX = nx; Pl.wallNZ = nz; Pl.wallTime = 0;
+  Pl.vel.y = clamp(Pl.vel.y, W.attachVyMin, W.attachVyMax);
+  Pl.dashAvail = true; Pl.jumping = false;
+  emit('wallrun');
+}
+
+function wallRunMove(dt, wdx, wdz, wmag, slideHeld, jumpHeld) {
+  const W = CONFIG.wallRun;
+  Pl.wallTime += dt;
+  let hit = probeWall(Pl.wallBox);
+  if (!hit) {   // allow flowing onto the next wall segment if it is coplanar
+    hit = probeWall(null);
+    if (hit && (hit.box === Pl.lastWall || hit.nx * Pl.wallNX + hit.nz * Pl.wallNZ < 0.95)) hit = null;
+  }
+  if (!hit) { detachWall(); airMove(dt, wdx, wdz, wmag, slideHeld, jumpHeld); return; }
+  if (Pl.jumpBuffer > 0) { wallJump(hit.box, hit.nx, hit.nz); applyGravity(dt, jumpHeld, 1); return; }
+  if (Pl.dashBuffer > 0 && Pl.dashAvail) { startDash(); dashMove(dt); return; }
+  if (Pl.wallTime > W.maxTime || slideHeld || wmag < 0.05 || wdx * hit.nx + wdz * hit.nz > 0.5) {
+    detachWall(); airMove(dt, wdx, wdz, wmag, slideHeld, jumpHeld); return;
+  }
+  Pl.wallBox = hit.box; Pl.wallNX = hit.nx; Pl.wallNZ = hit.nz;
+  let tx = -hit.nz, tz = hit.nx;
+  if (tx * Pl.vel.x + tz * Pl.vel.z < 0) { tx = -tx; tz = -tz; }
+  let ts = tx * Pl.vel.x + tz * Pl.vel.z;
+  if (ts < W.speed) ts = Math.min(W.speed, ts + W.accel * dt);
+  Pl.vel.x = tx * ts - hit.nx * W.stick; Pl.vel.z = tz * ts - hit.nz * W.stick;
+  Pl.vel.y = Math.max(Pl.vel.y - CONFIG.jump.gravity * W.gravityScale * dt, -6);
+}
+
+function dashMove(dt) {
+  const D = CONFIG.dash;
+  Pl.dashTime -= dt;
+  if (Pl.dashTime > 0) { Pl.vel.x = Pl.dashDX * D.speed; Pl.vel.z = Pl.dashDZ * D.speed; Pl.vel.y = 0; return; }
+  const sp = Math.max(Pl.dashPre, Math.min(D.exitMax, Math.max(Pl.dashPre, CONFIG.move.runSpeed) + D.exitBoost));
+  Pl.vel.x = Pl.dashDX * sp; Pl.vel.z = Pl.dashDZ * sp; Pl.vel.y = 0; Pl.dashTime = 0;
+}
+
+function onLand(impact) {
+  Pl.sinceLand = 0; Pl.wallRun = false; Pl.dashAvail = true; Pl.lastWall = null; Pl.jumping = false;
+  const hs = Math.hypot(Pl.vel.x, Pl.vel.z);
+  if (hs > Pl.topSpeed) Pl.topSpeed = Math.min(CONFIG.move.maxRunSpeed, hs);
+  emit('land', impact);
+}
+
+function stepPlayer(dt, inp, locked) {
+  Pl.prev.copy(Pl.pos);
+  const mx = locked ? 0 : inp.moveX, my = locked ? 0 : inp.moveY;
+  const sy = Math.sin(Pl.yaw), cy = Math.cos(Pl.yaw);
+  // forward = (-sin yaw, -cos yaw), right = (cos yaw, -sin yaw)
+  let wx = -sy * my + cy * mx, wz = -cy * my - sy * mx;
+  let wmag = Math.hypot(wx, wz); if (wmag > 1) { wx /= wmag; wz /= wmag; wmag = 1; }
+  const wdx = wmag > 1e-4 ? wx / wmag : 0, wdz = wmag > 1e-4 ? wz / wmag : 0;
+  if (!locked) { if (inp.jumpPressed) Pl.jumpBuffer = CONFIG.jump.buffer; if (inp.dashPressed) Pl.dashBuffer = CONFIG.dash.buffer; }
+  const jumpHeld = !locked && inp.jumpHeld, slideHeld = !locked && inp.slideHeld;
+
+  // ride moving platforms
+  if (Pl.grounded && Pl.groundBox && Pl.groundBox.mover) { Pl.pos.x += Pl.groundBox.dx; Pl.pos.y += Pl.groundBox.dy; Pl.pos.z += Pl.groundBox.dz; }
+  if (Pl.wallCooldown > 0) Pl.wallCooldown -= dt;
+  if (Pl.padLock > 0) Pl.padLock -= dt;
+  Pl.sinceLand += dt;
+
+  if (Pl.dashTime > 0) dashMove(dt);
+  else if (Pl.wallRun) wallRunMove(dt, wdx, wdz, wmag, slideHeld, jumpHeld);
+  else if (Pl.grounded) groundMove(dt, wdx, wdz, wmag, slideHeld);
+  else airMove(dt, wdx, wdz, wmag, slideHeld, jumpHeld);
+  Pl.jumpBuffer = Math.max(0, Pl.jumpBuffer - dt);
+  Pl.dashBuffer = Math.max(0, Pl.dashBuffer - dt);
+
+  const wasGrounded = Pl.grounded, vyBefore = Pl.vel.y;
+  moveAndCollide(dt);
+  if (Pl.grounded && !wasGrounded) onLand(-vyBefore);
+  if (Pl.grounded && Pl.wallRun) Pl.wallRun = false;
+  Pl.airTime = Pl.grounded ? 0 : Pl.airTime + dt;
+  if (Pl.grounded || Pl.wallRun) Pl.lastGroundY = Pl.pos.y;
+
+  // facing (character model + ghost) follows movement
+  const hs = Math.hypot(Pl.vel.x, Pl.vel.z);
+  if (hs > 0.6) Pl.facing += angleDiff(Pl.facing, Math.atan2(-Pl.vel.x, -Pl.vel.z)) * Math.min(1, dt * 14);
+  // animation state, also recorded into the ghost
+  if (Pl.dashTime > 0) Pl.anim = ANIM.DASH;
+  else if (Pl.wallRun) { const rx = Math.cos(Pl.facing), rz = -Math.sin(Pl.facing); Pl.wallSide = (Pl.wallNX * rx + Pl.wallNZ * rz) > 0 ? -1 : 1; Pl.anim = Pl.wallSide < 0 ? ANIM.WALL_L : ANIM.WALL_R; }
+  else if (!Pl.grounded) Pl.anim = Pl.vel.y > 0 ? ANIM.UP : ANIM.FALL;
+  else if (Pl.sliding) Pl.anim = ANIM.SLIDE;
+  else if (Pl.crouched) Pl.anim = ANIM.CROUCH;
+  else Pl.anim = hs > 0.5 ? ANIM.RUN : ANIM.IDLE;
+  if (Pl.anim === ANIM.RUN || Pl.anim === ANIM.WALL_L || Pl.anim === ANIM.WALL_R || Pl.anim === ANIM.CROUCH) Pl.phase = (Pl.phase + hs * dt / 3.2) % 1;
+
+  checkTriggers();
+}
+
+function checkTriggers() {
+  const W = world, x = Pl.pos.x, y = Pl.pos.y, z = Pl.pos.z, h = Pl.height, r = CONFIG.player.radius;
+  if (y < W.killY || y < Pl.lastGroundY - CONFIG.fallKillDepth) { kill(); return; }
+  for (const b of W.hazards) {
+    if (y >= b.cy + b.hy - 0.05 || y + h <= b.cy - b.hy + 0.05) continue;
+    if (circleVsBox(b, x, z, r - 0.1)) { kill(); return; }
+  }
+  for (const s of W.spinners) {
+    const y0 = s.y + s.h0, y1 = y0 + s.thick;
+    if (y >= y1 - 0.05 || y + h <= y0 + 0.05) continue;
+    const ang = s.phase + s.speed * W.time, px = x - s.x, pz = z - s.z, rr = r + s.thick * 0.5 - 0.1;
+    for (let k = 0; k < s.bars; k++) {
+      const a = ang + (k * Math.PI) / s.bars, dx = Math.cos(a), dz = Math.sin(a);
+      const t = clamp(px * dx + pz * dz, -s.len, s.len), ex = px - dx * t, ez = pz - dz * t;
+      if (ex * ex + ez * ez < rr * rr) { kill(); return; }
+    }
+  }
+  if (Pl.padLock <= 0) for (const p of W.pads) {
+    const dx = x - p.x, dz = z - p.z, pr = p.r + r * 0.5;   // body overlapping the disc counts
+    if (dx * dx + dz * dz > pr * pr || y > p.y + 0.3 || y < p.y - 0.4 || Pl.vel.y > 0.5) continue;
+    Pl.vel.y = p.power; Pl.grounded = false; Pl.groundBox = null; Pl.jumping = false; Pl.coyote = 0;
+    Pl.dashAvail = true; Pl.lastWall = null; Pl.padLock = 0.25; Pl.sliding = false;
+    if (canStand()) { Pl.height = CONFIG.player.standHeight; Pl.crouched = false; }
+    p.bounce = 1; emit('pad', p.x, p.z);
+    break;
+  }
+  if (game.mode !== 'running') return;
+  const cy = y + 0.9;
+  for (const cp of W.checkpoints) {
+    if (cp.i > game.lastCP && pointInTrigger(cp.trig, x, cy, z)) reachCheckpoint(cp);
+  }
+  if (pointInTrigger(W.finish.trig, x, cy, z)) finishRun();
+}
+
+// ============================================================================
+// CHARACTER RIG: capsule body, head, limbs. Used for the player (3rd person) and the ghost.
+// ============================================================================
+const RIG_GEO = {
+  torso: new THREE.CapsuleGeometry(0.24, 0.3, 6, 14),
+  head: new THREE.SphereGeometry(0.2, 20, 14),
+  visor: new THREE.CapsuleGeometry(0.07, 0.2, 4, 10),
+  arm: new THREE.CapsuleGeometry(0.07, 0.42, 4, 8),
+  leg: new THREE.CapsuleGeometry(0.09, 0.6, 4, 8),
+  stripe: new THREE.TorusGeometry(0.245, 0.035, 6, 20),
+};
+const RIG_GEO_SET = new Set(Object.values(RIG_GEO));
+const MAT_CHAR = {
+  body: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.45 }),
+  limb: new THREE.MeshStandardMaterial({ color: '#2d2f7a', roughness: 0.6 }),
+  visor: new THREE.MeshStandardMaterial({ color: '#16123c', roughness: 0.2, emissive: '#3df0ff', emissiveIntensity: 0.5 }),
+  accent: new THREE.MeshStandardMaterial({ color: '#ff3d87', roughness: 0.45 }),
+};
+const MAT_GHOST = new THREE.MeshStandardMaterial({ color: '#c8f7ff', emissive: '#38dcff', emissiveIntensity: 1.0, transparent: true, opacity: 0.4, depthWrite: false, roughness: 0.3 });
+function makeRig(ghost) {
+  const m = ghost ? { body: MAT_GHOST, limb: MAT_GHOST, visor: MAT_GHOST, accent: MAT_GHOST } : MAT_CHAR;
+  const root = new THREE.Group(), body = new THREE.Group(), hips = new THREE.Group();
+  root.add(body); body.add(hips); hips.position.y = 0.8;
+  const mesh = (geo, mat, parent, x, y, z) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); o.castShadow = !ghost; parent.add(o); return o; };
+  const torso = mesh(RIG_GEO.torso, m.body, hips, 0, 0.36, 0);
+  mesh(RIG_GEO.stripe, m.accent, torso, 0, -0.05, 0).rotation.x = Math.PI / 2;
+  const head = mesh(RIG_GEO.head, m.body, hips, 0, 0.86, 0);
+  const visor = mesh(RIG_GEO.visor, m.visor, head, 0, 0.02, -0.15); visor.rotation.z = Math.PI / 2;
+  const limb = (geo, mat, x, y, len) => { const pivot = new THREE.Group(); pivot.position.set(x, y, 0); hips.add(pivot); mesh(geo, mat, pivot, 0, -len / 2, 0); return pivot; };
+  const armL = limb(RIG_GEO.arm, m.limb, -0.33, 0.6, 0.56), armR = limb(RIG_GEO.arm, m.limb, 0.33, 0.6, 0.56);
+  const legL = limb(RIG_GEO.leg, m.limb, -0.13, 0.02, 0.78), legR = limb(RIG_GEO.leg, m.limb, 0.13, 0.02, 0.78);
+  return { root, body, hips, torso, head, armL, armR, legL, legR, squash: 0, squashV: 0, cur: { lean: 0, roll: 0, hipY: 0.8, aL: 0, aR: 0, lL: 0, lR: 0, aLz: 0, aRz: 0 } };
+}
+// Procedural pose: target angles per animation state, blended with exponential smoothing.
+function poseRig(R, anim, phase, speed, t, dt) {
+  const s = Math.sin(phase * TAU), c = Math.cos(phase * TAU);
+  let lean = 0, roll = 0, hipY = 0.8, aL = 0, aR = 0, lL = 0, lR = 0, aLz = 0.08, aRz = -0.08;
+  const amp = clamp(speed / 9, 0.35, 1.25);
+  switch (anim) {
+    case ANIM.IDLE: aL = 0.06 * Math.sin(t * 2); aR = -aL; hipY = 0.8 + Math.sin(t * 2.4) * 0.01; break;
+    case ANIM.RUN: lL = s * 0.95 * amp; lR = -lL; aL = -s * 0.85 * amp; aR = -aL; lean = 0.1 + 0.14 * amp; hipY = 0.8 + Math.abs(c) * 0.07 * amp; break;
+    case ANIM.UP: lL = 0.9; lR = -0.25; aL = 2.4; aR = 2.0; aLz = 0.4; aRz = -0.4; lean = 0.05; break;
+    case ANIM.FALL: lL = 0.5; lR = 0.1; aL = 1.4; aR = 1.6; aLz = 0.9; aRz = -0.9; lean = 0.08; break;
+    case ANIM.SLIDE: hipY = 0.36; lean = -0.95; lL = 1.75; lR = 1.45; aL = -0.6; aR = 0.9; aLz = 0.7; aRz = -0.5; break;
+    case ANIM.CROUCH: hipY = 0.5; lean = 0.55; lL = s * 0.6 + 0.9; lR = -s * 0.6 + 0.9; aL = -s * 0.5; aR = s * 0.5; break;
+    case ANIM.WALL_L: case ANIM.WALL_R: {
+      const side = anim === ANIM.WALL_L ? 1 : -1;
+      lL = s * 1.0; lR = -lL; aL = -s * 0.7; aR = -aL; lean = 0.2; roll = side * 0.38; hipY = 0.8 + Math.abs(c) * 0.05;
+      if (side > 0) aRz = -1.2; else aLz = 1.2; break;
+    }
+    case ANIM.DASH: lean = 0.75; lL = -0.6; lR = -0.9; aL = -1.2; aR = -1.2; aLz = 0.5; aRz = -0.5; break;
+  }
+  const k = 1 - Math.exp(-dt * 16), C = R.cur;
+  C.lean = lerp(C.lean, lean, k); C.roll = lerp(C.roll, roll, k); C.hipY = lerp(C.hipY, hipY, k);
+  C.aL = lerp(C.aL, aL, k); C.aR = lerp(C.aR, aR, k); C.lL = lerp(C.lL, lL, k); C.lR = lerp(C.lR, lR, k);
+  C.aLz = lerp(C.aLz, aLz, k); C.aRz = lerp(C.aRz, aRz, k);
+  R.hips.position.y = C.hipY; R.hips.rotation.x = -C.lean; R.body.rotation.z = C.roll;
+  R.armL.rotation.set(C.aL, 0, C.aLz); R.armR.rotation.set(C.aR, 0, C.aRz);
+  R.legL.rotation.x = C.lL; R.legR.rotation.x = C.lR;
+  // squash & stretch spring
+  R.squashV += (-R.squash * 180 - R.squashV * 16) * dt; R.squash += R.squashV * dt;
+  const q = clamp(R.squash, -0.35, 0.35);
+  R.body.scale.set(1 + q * 0.5, 1 - q, 1 + q * 0.5);
+}
+const playerRig = makeRig(false);
+scene.add(playerRig.root);
+function setFirstPersonBody(fp) {
+  // In first person the body is still drawn into the shadow map (handy for judging landings)
+  // but writes no colour or depth, so it never blocks the view.
+  for (const m of Object.values(MAT_CHAR)) { m.colorWrite = !fp; m.depthWrite = !fp; }
+}
+
+// ============================================================================
+// GHOST: records position/facing/animation at 30 Hz; replays the PB with interpolation.
+// ============================================================================
+const rec = { buf: new Int32Array(CONFIG.ghost.hz * CONFIG.ghost.maxSeconds * 6), n: 0, teleport: false, overflow: false };
+function recordFrame() {
+  if ((rec.n + 1) * 6 > rec.buf.length) { rec.overflow = true; return; }
+  const o = rec.n * 6, b = rec.buf;
+  b[o] = Math.round(Pl.pos.x * 100); b[o + 1] = Math.round(Pl.pos.y * 100); b[o + 2] = Math.round(Pl.pos.z * 100);
+  b[o + 3] = Math.round(wrapAngle(Pl.facing) * 1000); b[o + 4] = Pl.anim | (rec.teleport ? 16 : 0);
+  b[o + 5] = Math.round(Pl.phase * 100) % 100;
+  rec.teleport = false; rec.n++;
+}
+const ghost = { data: null, rig: makeRig(true), speed: 0 };
+scene.add(ghost.rig.root); ghost.rig.root.visible = false;
+const _gp = new THREE.Vector3();
+// Interpolates between the two recorded frames around time t (seconds since GO).
+// Frames flagged as teleports (respawns) are snapped to instead of blended.
+function updateGhost(t, dt) {
+  const g = ghost.data, R = ghost.rig.root;
+  const active = g && settings.ghost && world && (game.mode === 'countdown' || game.mode === 'running' || game.mode === 'finished');
+  if (!active) { R.visible = false; return; }
+  const f = Math.max(0, t) * CONFIG.ghost.hz;
+  let i0 = Math.floor(f), a = f - i0;
+  if (i0 >= g.n - 1) { i0 = g.n - 2; a = 1; }
+  const F = g.frames, o0 = i0 * 6, o1 = o0 + 6;
+  if (F[o1 + 4] & 16) a = 0;
+  _gp.set(lerp(F[o0], F[o1], a), lerp(F[o0 + 1], F[o1 + 1], a), lerp(F[o0 + 2], F[o1 + 2], a));
+  const yaw = F[o0 + 3] + angleDiff(F[o0 + 3], F[o1 + 3]) * a;
+  let ph0 = F[o0 + 5], ph1 = F[o1 + 5]; if (ph1 < ph0) ph1 += 1;
+  const phase = (ph0 + (ph1 - ph0) * a) % 1;
+  const sp = Math.hypot(F[o1] - F[o0], F[o1 + 2] - F[o0 + 2]) * CONFIG.ghost.hz;
+  ghost.speed = lerp(ghost.speed, sp, 0.2);
+  const done = f >= g.n - 1;
+  R.visible = true;
+  R.position.copy(_gp); R.rotation.y = yaw;
+  poseRig(ghost.rig, done ? ANIM.IDLE : (F[o0 + 4] & 15), phase, ghost.speed, performance.now() / 1000, dt);
+  MAT_GHOST.opacity = done ? Math.max(0.12, MAT_GHOST.opacity - dt * 0.5) : 0.4;
+}
+
+// ============================================================================
+// CAMERA / FX: first/third-person camera, FOV boost, roll, bob, landing dip,
+// pooled particles and screen-space speed lines.
+// ============================================================================
+const camFx = { hfov: CONFIG.camera.fov, kick: 0, roll: 0, eye: CONFIG.player.eyeStand, bobPhase: 0, bobAmt: 0, dip: 0, dipV: 0,
+  tpDist: CONFIG.camera.tpDist, pivotY: 0, stepDist: 0, speedLines: 0, shake: 0 };
+const renderPos = new THREE.Vector3();
+function setFov(hdeg) {
+  const v = 2 * Math.atan(Math.tan((hdeg * Math.PI) / 360) / camera.aspect) * (180 / Math.PI);
+  camera.fov = clamp(v, 45, 110); camera.updateProjectionMatrix();
+}
+// Third-person camera collision: ray (slab test) against every solid box, in each box's local frame.
+function rayDistance(ox, oy, oz, dx, dy, dz, maxT, pad) {
+  let best = maxT;
+  for (const b of world.solids) {
+    const rx = ox - b.cx, rz = oz - b.cz;
+    const lox = b.cos * rx - b.sin * rz, loz = b.sin * rx + b.cos * rz, loy = oy - b.cy;
+    const ldx = b.cos * dx - b.sin * dz, ldz = b.sin * dx + b.cos * dz, ldy = dy;
+    let t0 = 0, t1 = best;
+    const o = [lox, loy, loz], d = [ldx, ldy, ldz], h = [b.hx + pad, b.hy + pad, b.hz + pad];
+    let ok = true;
+    for (let i = 0; i < 3; i++) {
+      if (Math.abs(d[i]) < 1e-8) { if (Math.abs(o[i]) > h[i]) { ok = false; break; } continue; }
+      let ta = (-h[i] - o[i]) / d[i], tb = (h[i] - o[i]) / d[i]; if (ta > tb) { const tt = ta; ta = tb; tb = tt; }
+      if (ta > t0) t0 = ta; if (tb < t1) t1 = tb; if (t0 > t1) { ok = false; break; }
+    }
+    if (ok && t0 > 0 && t0 < best) best = t0;
+  }
+  return best;
+}
+
+// Pooled particles: one Points object with fixed buffers; emit() overwrites the oldest slot.
+const FX = (() => {
+  const N = CONFIG.render.particles;
+  const pos = new Float32Array(N * 3), col = new Float32Array(N * 3), size = new Float32Array(N), alpha = new Float32Array(N), shape = new Float32Array(N);
+  const vel = new Float32Array(N * 3), life = new Float32Array(N), maxLife = new Float32Array(N), grav = new Float32Array(N), drag = new Float32Array(N), size0 = new Float32Array(N), spin = new Float32Array(N);
+  const geo = new THREE.BufferGeometry();
+  const attr = (a, n) => { const b = new THREE.BufferAttribute(a, n); b.setUsage(THREE.DynamicDrawUsage); return b; };
+  geo.setAttribute('position', attr(pos, 3)); geo.setAttribute('aColor', attr(col, 3)); geo.setAttribute('aSize', attr(size, 1));
+  geo.setAttribute('aAlpha', attr(alpha, 1)); geo.setAttribute('aShape', attr(shape, 1));
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uScale: { value: 500 } }, transparent: true, depthWrite: false,
+    vertexShader: `attribute vec3 aColor; attribute float aSize; attribute float aAlpha; attribute float aShape; uniform float uScale;
+      varying vec3 vColor; varying float vAlpha; varying float vShape;
+      void main(){ vColor = aColor; vAlpha = aAlpha; vShape = aShape; vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = aSize * uScale / max(0.2, -mv.z); gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `varying vec3 vColor; varying float vAlpha; varying float vShape;
+      void main(){ vec2 p = gl_PointCoord - 0.5; float a;
+        if (vShape < 0.5) a = 1.0 - smoothstep(0.2, 0.5, length(p));
+        else if (vShape < 1.5) a = step(abs(p.x), 0.5) * step(abs(p.y), 0.28);
+        else { a = 1.0 - smoothstep(0.0, 0.5, length(p)); a *= a; }
+        a *= vAlpha; if (a < 0.01) discard; gl_FragColor = vec4(vColor, a);
+        #include <colorspace_fragment>
+      }`,
+  });
+  const points = new THREE.Points(geo, mat); points.frustumCulled = false; points.renderOrder = 5; scene.add(points);
+  let cursor = 0, live = 0;
+  const c = new THREE.Color();
+  return {
+    rate: 1, mat,
+    emit(x, y, z, vx, vy, vz, lifeS, sz, color, g = 0, dr = 0, sh = 0) {
+      const i = cursor; cursor = (cursor + 1) % N;
+      pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z; vel[i * 3] = vx; vel[i * 3 + 1] = vy; vel[i * 3 + 2] = vz;
+      life[i] = maxLife[i] = lifeS; size0[i] = sz; grav[i] = g; drag[i] = dr; shape[i] = sh; spin[i] = Math.random() * TAU;
+      c.set(color); col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; live = N;
+    },
+    count(n) { return Math.max(1, Math.round(n * this.rate)); },
+    clear() { life.fill(0); size.fill(0); alpha.fill(0); live = N; },
+    update(dt) {
+      if (!live) return;
+      let any = 0;
+      for (let i = 0; i < N; i++) {
+        if (life[i] <= 0) { if (size[i] !== 0) { size[i] = 0; alpha[i] = 0; } continue; }
+        any++; life[i] -= dt;
+        const k = Math.max(0, 1 - drag[i] * dt);
+        vel[i * 3] *= k; vel[i * 3 + 1] = vel[i * 3 + 1] * k - grav[i] * dt; vel[i * 3 + 2] *= k;
+        if (shape[i] === 1) { spin[i] += dt * 9; vel[i * 3] += Math.sin(spin[i]) * dt * 3; }
+        pos[i * 3] += vel[i * 3] * dt; pos[i * 3 + 1] += vel[i * 3 + 1] * dt; pos[i * 3 + 2] += vel[i * 3 + 2] * dt;
+        const t = Math.max(0, life[i] / maxLife[i]);
+        alpha[i] = shape[i] === 1 ? Math.min(1, t * 3) : t;
+        size[i] = size0[i] * (shape[i] === 0 ? 0.6 + (1 - t) * 0.8 : 1);
+      }
+      live = any ? N : 0;
+      for (const k of ['position', 'aColor', 'aSize', 'aAlpha', 'aShape']) geo.attributes[k].needsUpdate = true;
+    },
+    dust(x, y, z, n, spd, color = '#ffffff') {
+      for (let i = 0, m = this.count(n); i < m; i++) { const a = Math.random() * TAU, s = spd * (0.5 + Math.random() * 0.7);
+        this.emit(x + Math.cos(a) * 0.3, y + 0.08, z + Math.sin(a) * 0.3, Math.cos(a) * s, 0.6 + Math.random() * 1.2, Math.sin(a) * s, 0.45 + Math.random() * 0.3, 0.35 + Math.random() * 0.3, color, 2, 3, 0); }
+    },
+    burst(x, y, z, n, spd, color, lifeS = 0.5, sz = 0.18, shape = 2, g = 0) {
+      for (let i = 0, m = this.count(n); i < m; i++) { const u = Math.random() * 2 - 1, a = Math.random() * TAU, q = Math.sqrt(1 - u * u), s = spd * (0.4 + Math.random() * 0.8);
+        this.emit(x, y, z, Math.cos(a) * q * s, u * s, Math.sin(a) * q * s, lifeS * (0.6 + Math.random() * 0.6), sz, color, g, 2, shape); }
+    },
+    ring(x, y, z, n, radius, spd, color) {
+      for (let i = 0, m = this.count(n); i < m; i++) { const a = (i / m) * TAU;
+        this.emit(x + Math.cos(a) * radius, y, z + Math.sin(a) * radius, Math.cos(a) * spd, 1.5 + Math.random(), Math.sin(a) * spd, 0.6, 0.3, color, 3, 2, 2); }
+    },
+    confetti(x, y, z, n) {
+      const cols = ['#ff3d87', '#ffd23f', '#36d7ff', '#6b5bff', '#2ee67a', '#ff8a3d', '#ffffff'];
+      for (let i = 0, m = this.count(n); i < m; i++) { const a = Math.random() * TAU, s = 3 + Math.random() * 7;
+        this.emit(x + (Math.random() - 0.5) * 6, y + Math.random() * 2, z + (Math.random() - 0.5) * 2, Math.cos(a) * s * 0.6, 7 + Math.random() * 8, Math.sin(a) * s * 0.6, 2.2 + Math.random() * 1.5, 0.22 + Math.random() * 0.12, cols[i % cols.length], 9, 1.4, 1); }
+    },
+  };
+})();
+
+// Screen-space speed lines: a full-screen quad drawn after the scene, intensity driven by speed.
+const fxScene = new THREE.Scene(), fxCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const speedUniforms = { uTime: { value: 0 }, uI: { value: 0 }, uAspect: { value: 1 } };
+fxScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+  uniforms: speedUniforms, transparent: true, depthTest: false, depthWrite: false,
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+  fragmentShader: `uniform float uTime; uniform float uI; uniform float uAspect; varying vec2 vUv;
+    float h1(float n){ return fract(sin(n * 127.1) * 43758.5453); }
+    void main(){
+      vec2 p = (vUv - 0.5) * vec2(uAspect, 1.0);
+      float r = length(p) / (0.5 * max(uAspect, 1.0));
+      float a = atan(p.y, p.x) / 6.2831853 + 0.5;
+      float cell = a * 120.0, id = floor(cell), f = fract(cell), rnd = h1(id);
+      if (rnd < 0.5) discard;
+      float w = 0.06 + 0.14 * h1(id + 3.1);
+      float line = 1.0 - smoothstep(0.0, w, abs(f - 0.5));
+      float seg = fract(r * 1.3 - uTime * (1.4 + 1.8 * h1(id + 7.7)) + rnd * 9.0);
+      float dash = smoothstep(0.0, 0.2, seg) * (1.0 - smoothstep(0.45, 0.9, seg));
+      float mask = smoothstep(0.42, 1.05, r);
+      float alpha = line * dash * mask * uI * 0.6;
+      if (alpha < 0.004) discard;
+      gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
+    }`,
+})));
+
+// Shadow camera follows the player, snapped to shadow-map texels to stop edge shimmer.
+const sunBasis = { right: new THREE.Vector3(), up: new THREE.Vector3(), fwd: new THREE.Vector3() };
+{ sunBasis.fwd.copy(SUN_DIR).negate(); sunBasis.right.crossVectors(new THREE.Vector3(0, 1, 0), sunBasis.fwd).normalize(); sunBasis.up.crossVectors(sunBasis.fwd, sunBasis.right).normalize(); }
+const _sv = new THREE.Vector3();
+function updateSun(focus) {
+  const texel = (CONFIG.render.shadowExtent * 2) / sun.shadow.mapSize.x;
+  const r = Math.round(focus.dot(sunBasis.right) / texel) * texel, u = Math.round(focus.dot(sunBasis.up) / texel) * texel, f = focus.dot(sunBasis.fwd);
+  _sv.copy(sunBasis.right).multiplyScalar(r).addScaledVector(sunBasis.up, u).addScaledVector(sunBasis.fwd, f);
+  sun.target.position.copy(_sv); sun.position.copy(_sv).addScaledVector(SUN_DIR, 90);
+  sun.target.updateMatrixWorld();
+}
+
+function updateCamera(dt) {
+  const hs = Math.hypot(Pl.vel.x, Pl.vel.z), sp3 = Math.hypot(hs, Pl.vel.y * 0.4);
+  const playing = game.mode === 'countdown' || game.mode === 'running' || game.mode === 'finished';
+  // FOV widens with speed (smoothed) plus a kick on dash
+  camFx.kick = damp(camFx.kick, 0, 5, dt);
+  const target = settings.fov + CONFIG.camera.fovBoost * smoothstep(9.5, 16, hs) + camFx.kick;
+  camFx.hfov = damp(camFx.hfov, target, 4, dt); setFov(camFx.hfov);
+  // roll away from the wall while wall-running
+  const rollT = Pl.wallRun ? (Pl.wallSide < 0 ? -1 : 1) * (CONFIG.wallRun.rollDeg * Math.PI / 180) : (Pl.sliding ? 0.04 : 0);
+  camFx.roll = damp(camFx.roll, rollT, 9, dt);
+  camFx.eye = damp(camFx.eye, Pl.height < 1.2 ? CONFIG.player.eyeSlide : CONFIG.player.eyeStand, 16, dt);
+  // head bob while running
+  const running = Pl.grounded && !Pl.sliding && hs > 1;
+  camFx.bobAmt = damp(camFx.bobAmt, running ? clamp(hs / 9, 0, 1.3) : 0, 10, dt);
+  if (running || Pl.wallRun) camFx.bobPhase += dt * hs * 0.95;
+  const bobY = Math.abs(Math.sin(camFx.bobPhase)) * CONFIG.camera.bob * camFx.bobAmt;
+  const bobX = Math.cos(camFx.bobPhase) * CONFIG.camera.bob * 0.5 * camFx.bobAmt;
+  // landing dip: damped spring
+  camFx.dipV += (-camFx.dip * 140 - camFx.dipV * 18) * dt; camFx.dip += camFx.dipV * dt;
+  camFx.shake = Math.max(0, camFx.shake - dt * 3);
+  const shx = (Math.random() - 0.5) * camFx.shake * 0.05, shy = (Math.random() - 0.5) * camFx.shake * 0.05;
+
+  if (settings.view === 'fp' || !playing) {
+    const rx = Math.cos(Pl.yaw), rz = -Math.sin(Pl.yaw);
+    camera.position.set(renderPos.x + rx * bobX + shx, renderPos.y + camFx.eye + bobY + camFx.dip + shy, renderPos.z + rz * bobX);
+    camera.rotation.set(Pl.pitch, Pl.yaw, camFx.roll);
+  } else {
+    camFx.pivotY = damp(camFx.pivotY, renderPos.y + (Pl.height < 1.2 ? 1.0 : 1.5), 14, dt);
+    const px = renderPos.x, py = camFx.pivotY + camFx.dip * 0.5, pz = renderPos.z;
+    const cp = Math.cos(Pl.pitch), fx = -Math.sin(Pl.yaw) * cp, fy = Math.sin(Pl.pitch), fz = -Math.cos(Pl.yaw) * cp;
+    const want = CONFIG.camera.tpDist + smoothstep(10, 16, hs) * 0.8;
+    const hit = rayDistance(px, py, pz, -fx, -fy, -fz, want, 0.22) - 0.15;
+    camFx.tpDist = hit < camFx.tpDist ? Math.max(0.4, hit) : damp(camFx.tpDist, hit, 5, dt);
+    camera.position.set(px - fx * camFx.tpDist + shx, py - fy * camFx.tpDist + shy, pz - fz * camFx.tpDist);
+    camera.rotation.set(Pl.pitch, Pl.yaw, camFx.roll * 0.5);
+  }
+  // speed lines
+  camFx.speedLines = Math.max(camFx.speedLines - dt * 2.5, smoothstep(11, 17, sp3));
+  speedUniforms.uI.value = playing ? camFx.speedLines : 0;
+}
+
+// ============================================================================
+// UI: screens, HUD, popups, level select, settings, results.
+// ============================================================================
+const UI = {
+  screens: ['loading', 'title', 'levels', 'pause', 'settings', 'controls', 'results', 'confirm'],
+  current: 'loading', back: 'title',
+  show(name) {
+    for (const s of this.screens) $('scr-' + s).classList.toggle('show', s === name);
+    this.current = name;
+  },
+  hud(on) { $('hud').classList.toggle('hidden', !on); $('touch').classList.toggle('hidden', !(on && Input.touchMode)); },
+  restart(el, cls = 'go') { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); },
+  toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(this._tt); this._tt = setTimeout(() => t.classList.remove('show'), 2200); },
+  medalEl(m, size) { return `<span class="medal ${m || 'none'}"${size ? ` style="--s:${size}px"` : ''}></span>`; },
+  lastTimer: -1, lastSpeed: -1,
+  updateHud() {
+    const t = game.mode === 'running' ? runTime() : game.mode === 'finished' ? game.finalTime : 0;
+    const cs = Math.floor(t * 100);
+    if (cs !== this.lastTimer) { this.lastTimer = cs; $('timer').textContent = fmtTime(t); this.updateTarget(t); }
+    const hs = Math.hypot(Pl.vel.x, Pl.vel.z), ds = Math.round(hs * 10);
+    if (ds !== this.lastSpeed) { this.lastSpeed = ds; $('speedVal').textContent = (ds / 10).toFixed(1); $('speedFill').style.width = `${clamp(hs / 18, 0, 1) * 100}%`; }
+    const ready = !Pl.grounded && Pl.dashAvail && game.mode === 'running';
+    if (ready !== this._dash) { this._dash = ready; $('dashPip').classList.toggle('ready', ready); $('tDash').classList.toggle('ready', ready); }
+  },
+  updateTarget(t) {
+    const md = world.def.medals; let html = '';
+    for (const m of ['gold', 'silver', 'bronze']) if (t <= md[m]) { html = `${this.medalEl(m, 14)}${fmtTime(md[m])}`; break; }
+    if (html !== this._target) { this._target = html; $('hudTarget').innerHTML = html; }
+  },
+  updateCp() { const n = world.checkpoints.length; $('hudCp').textContent = n ? `CP ${game.lastCP + 1}/${n}` : ''; },
+  countdown(n) { const el = $('countdown'); el.textContent = n > 0 ? String(n) : 'GO!'; el.classList.remove('go', 'gogo'); void el.offsetWidth; el.classList.add(n > 0 ? 'go' : 'gogo'); },
+  clearCountdown() { $('countdown').classList.remove('go', 'gogo'); },
+  penalty() { this.restart($('penaltyPop')); this.restart($('flash')); },
+  split(label, t, delta) {
+    const el = $('splitPop');
+    el.querySelector('.lbl').textContent = label; el.querySelector('.t').textContent = fmtTime(t);
+    const d = el.querySelector('.d');
+    if (delta == null) { d.style.display = 'none'; } else { d.style.display = ''; d.textContent = fmtDelta(delta); d.style.color = delta <= 0 ? 'var(--good)' : 'var(--bad)'; }
+    this.restart(el);
+  },
+  bigPop(text) { const el = $('bigPop'); el.textContent = text; this.restart(el); },
+  controlsHtml(compact) {
+    const rows = Input.touchMode ? [
+      ['Left thumb', 'Move'], ['Drag right side', 'Look'], ['JUMP', 'Jump (hold = higher)'], ['SLIDE', 'Slide / crouch'], ['DASH', 'Air dash'], ['↻', 'Restart'], ['VIEW', '1st / 3rd person'],
+    ] : [
+      ['<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>', 'Move'], ['Mouse', 'Look'], ['<kbd>Space</kbd>', compact ? 'Jump' : 'Jump (hold = higher); wall-jump off walls'],
+      ['<kbd>Shift</kbd> / <kbd>C</kbd>', 'Slide (at speed) / crouch'], ['<kbd>E</kbd> / <kbd>Q</kbd>', 'Air dash'], ['<kbd>R</kbd>', 'Instant restart'],
+      ['<kbd>V</kbd>', '1st / 3rd person'], ['<kbd>Esc</kbd>', 'Pause'], ...(compact ? [] : [['<kbd>M</kbd>', 'Mute']]),
+    ];
+    const extra = compact ? '' : `<div class="k"></div><div style="color:var(--ink-soft);font-size:13px;padding-top:6px">Wall-run: jump at a <b>tinted chevron wall</b> while moving along it. Red/orange = danger. Green gates = checkpoints.</div>`;
+    return rows.map(([k, v]) => `<div class="k">${k}</div><div>${v}</div>`).join('') + extra;
+  },
+  showHint(on) {
+    const el = $('controlsHint');
+    if (on) el.innerHTML = this.controlsHtml(true);
+    el.classList.toggle('show', on);
+  },
+  renderLevels() {
+    const grid = $('levelGrid'); let html = '';
+    const tally = { gold: 0, silver: 0, bronze: 0 };
+    COURSES.forEach((c, i) => {
+      const best = save.best[c.id], medal = best ? medalFor(c, best.t) : null; if (medal) tally[medal]++;
+      const unlocked = isUnlocked(i), pal = PALETTES[c.palette];
+      html += `<button class="card${unlocked ? '' : ' locked'}" data-course="${i}" style="--c1:${pal.card[0]};--c2:${pal.card[1]}">
+        <div class="card-top"><span class="card-num">${i + 1}</span><span class="card-medal">${this.medalEl(medal, 34)}</span></div>
+        <div class="card-body"><div class="card-name">${c.name}</div><div class="card-hint">${c.hint}</div>
+          <div class="card-best">Best <b>${best ? fmtTime(best.t) : '—'}</b></div>
+          <div class="card-medals">${['gold', 'silver', 'bronze'].map((m) => `<span class="mchip">${this.medalEl(m, 16)}${fmtTime(c.medals[m])}</span>`).join('')}</div></div>
+        <div class="lock"><svg viewBox="0 0 24 24" fill="none" stroke="#1c1640" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2.5" fill="#fff"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Finish course ${i} to unlock</div>
+      </button>`;
+    });
+    grid.innerHTML = html;
+    $('medalTally').innerHTML = ['gold', 'silver', 'bronze'].map((m) => `<span class="tally">${this.medalEl(m, 22)}${tally[m]}<span>&nbsp;${m}</span></span>`).join('');
+  },
+  syncSettings() {
+    $('setSens').value = settings.sens; $('outSens').textContent = settings.sens.toFixed(2);
+    $('setFov').value = settings.fov; $('outFov').textContent = `${settings.fov}°`;
+    $('setVol').value = settings.volume; $('outVol').textContent = `${Math.round(settings.volume * 100)}%`;
+    $('setMute').classList.toggle('on', settings.muted); $('setGhost').classList.toggle('on', settings.ghost);
+    $('setInvert').classList.toggle('on', settings.invertY); $('setUnlockAll').classList.toggle('on', save.unlockAll);
+    for (const b of $('setView').children) b.classList.toggle('on', b.dataset.v === settings.view);
+    for (const b of $('setQuality').children) b.classList.toggle('on', b.dataset.v === settings.quality);
+    $('saveNote').textContent = Store.ok ? 'Progress is saved in this browser.' : 'Storage is unavailable: progress will not be kept after you close the page.';
+  },
+};
+
+// ============================================================================
+// GAME FLOW
+// ============================================================================
+const game = {
+  mode: 'loading', paused: false, headless: false, botInput: null,
+  courseIndex: 0, acc: 0, cdSteps: 0, cdShown: 0,
+  runSteps: 0, penalty: 0, lastCP: -1, splits: [], finalTime: 0, resultsAt: 0, pauseGuard: 0, hintUntil: 0,
+};
+const runTime = () => game.runSteps * STEP + game.penalty;
+const isUnlocked = (i) => save.unlockAll || i < save.unlocked;
+function medalFor(def, t) { const m = def.medals; return t <= m.gold ? 'gold' : t <= m.silver ? 'silver' : t <= m.bronze ? 'bronze' : null; }
+
+function ensureWorld(i) {
+  if (!world || world.def !== COURSES[i]) buildCourse(COURSES[i]);
+  game.courseIndex = i;
+}
+function goTitle() {
+  game.mode = 'title'; game.paused = false;
+  ensureWorld(world ? COURSES.indexOf(world.def) : 0);
+  resetPlayer(world.start); resetObstacles(world);
+  UI.hud(false); UI.show('title'); exitLock(); SFX.silence();
+}
+function goLevels() {
+  game.mode = 'levels'; game.paused = false;
+  UI.hud(false); UI.renderLevels(); UI.show('levels'); exitLock(); SFX.silence();
+}
+function playCourse(i) {
+  if (!isUnlocked(i)) return;
+  ensureWorld(i);
+  ghost.data = loadGhost(COURSES[i].id);
+  UI.show(null); UI.hud(true);
+  $('hudCourse').textContent = `${i + 1} · ${COURSES[i].name}`;
+  restartRun();
+  if (!save.hintsSeen) { UI.showHint(true); game.hintUntil = performance.now() + 14000; }
+  requestLock();
+}
+// Instant restart: no rebuilding, just resets state (well under a millisecond).
+function restartRun() {
+  if (!world) return;
+  game.mode = 'countdown'; game.paused = false; game.acc = 0;
+  game.cdSteps = Math.round(CONFIG.countdown * CONFIG.physicsHz); game.cdShown = -1;
+  game.runSteps = 0; game.penalty = 0; game.lastCP = -1; game.splits = []; game.finalTime = 0;
+  resetObstacles(world); resetPlayer(world.start);
+  rec.n = 0; rec.overflow = false; rec.teleport = false;
+  FX.clear(); events.length = 0; Input.consume();
+  camFx.dip = camFx.dipV = 0; camFx.roll = 0; camFx.kick = 0; camFx.tpDist = CONFIG.camera.tpDist; camFx.pivotY = world.start.y + 1.5;
+  MAT_GHOST.opacity = 0.4;
+  $('timer').classList.remove('done'); UI.lastTimer = -1; UI.updateCp(); UI.clearCountdown();
+  $('splitPop').classList.remove('go'); $('bigPop').classList.remove('go');
+  if (UI.current !== null) UI.show(null);
+  UI.hud(true);
+}
+function startRunning() {
+  game.mode = 'running'; game.runSteps = 0;
+  recordFrame();
+  world.startGate.curtainMat.opacity = 0;
+  UI.countdown(0); SFX.beep(true);
+}
+function kill() {
+  const cp = game.lastCP >= 0 ? world.checkpoints[game.lastCP] : world.start;
+  const deathX = Pl.pos.x, deathY = Math.max(Pl.pos.y, world.killY), deathZ = Pl.pos.z;
+  resetPlayer(cp);
+  rec.teleport = true;
+  if (game.mode === 'running') { game.penalty += CONFIG.respawnPenalty; UI.penalty(); }
+  emit('respawn', deathX, deathZ); emit('deathY', deathY);
+}
+function reachCheckpoint(cp) {
+  game.lastCP = cp.i; setCheckpointVisual(cp, true);
+  const t = runTime(); game.splits[cp.i] = t;
+  const best = save.best[world.def.id], bs = best && best.splits ? best.splits[cp.i] : null;
+  UI.split(`Checkpoint ${cp.i + 1}`, t, bs != null ? t - bs : null);
+  UI.updateCp(); emit('checkpoint', cp.x, cp.z);
+}
+function finishRun() {
+  const t = runTime(), def = world.def, id = def.id;
+  game.mode = 'finished'; game.finalTime = t; game.resultsAt = performance.now() + 1500;
+  const prev = save.best[id];
+  const isPB = !prev || t < prev.t - 1e-9;
+  const splits = game.splits.slice(); splits[world.checkpoints.length] = t;
+  game.result = { t, prevT: prev ? prev.t : null, isPB, medal: medalFor(def, t), prevSplits: prev ? prev.splits || [] : [], splits };
+  if (isPB) {
+    save.best[id] = { t, splits };
+    if (!rec.overflow) {
+      recordFrame();
+      if (saveGhost(id, rec, t)) ghost.data = loadGhost(id);
+    }
+  }
+  const idx = COURSES.indexOf(def);
+  if (save.unlocked < idx + 2) save.unlocked = Math.min(COURSES.length, idx + 2);
+  save.hintsSeen = true; UI.showHint(false);
+  persist();
+  $('timer').textContent = fmtTime(t); $('timer').classList.add('done');
+  UI.split('Finish', t, prev ? t - prev.t : null);
+  if (isPB && prev) UI.bigPop('NEW BEST!');
+  emit('finish', world.finish.x, world.finish.z);
+  if (isPB && prev) emit('newbest');
+}
+function showResults() {
+  const r = game.result, def = world.def, idx = COURSES.indexOf(def);
+  $('resCourse').textContent = `Course ${idx + 1} · ${def.name}`;
+  $('resTime').textContent = fmtTime(r.t);
+  $('resBadge').innerHTML = r.isPB ? `<span class="new-best">${r.prevT == null ? 'FIRST CLEAR!' : 'NEW BEST!'}</span>` : '';
+  const dEl = $('resDelta');
+  if (r.prevT == null) { dEl.textContent = 'Ghost saved. Now beat it!'; dEl.className = 'res-delta'; }
+  else { const d = r.t - r.prevT; dEl.textContent = `${fmtDelta(d)} vs previous best (${fmtTime(r.prevT)})`; dEl.className = 'res-delta ' + (d < 0 ? 'good' : 'bad'); }
+  $('resMedal').innerHTML = r.medal ? `${UI.medalEl(r.medal)}<span style="text-transform:capitalize">${r.medal} medal</span>` : `${UI.medalEl(null, 40)}<span style="color:var(--ink-soft)">No medal yet</span>`;
+  $('resTargets').innerHTML = ['gold', 'silver', 'bronze'].map((m) => `<span class="mchip${r.t <= def.medals[m] ? ' hit' : ''}">${UI.medalEl(m, 16)}${fmtTime(def.medals[m])}</span>`).join('');
+  const n = world.checkpoints.length;
+  let rows = '';
+  for (let i = 0; i <= n; i++) {
+    const t = r.splits[i], p = r.prevSplits[i];
+    const d = t != null && p != null ? t - p : null;
+    rows += `<div class="split-row"><span>${i < n ? `Checkpoint ${i + 1}` : 'Finish'}</span><span>${fmtTime(t)}</span><span class="d ${d == null ? '' : d <= 0 ? 'good' : 'bad'}">${d == null ? '' : fmtDelta(d)}</span></div>`;
+  }
+  $('resSplits').innerHTML = rows;
+  $('btnNext').disabled = !(idx + 1 < COURSES.length && isUnlocked(idx + 1));
+  UI.hud(false); UI.show('results'); exitLock(); SFX.silence();
+  game.mode = 'results';
+}
+function pauseGame() {
+  if (game.paused || !(game.mode === 'countdown' || game.mode === 'running')) return;
+  game.paused = true; game.pauseGuard = performance.now();
+  UI.show('pause'); SFX.silence(); exitLock(); Input.clear();
+}
+function resumeGame() {
+  if (!game.paused) return;
+  game.paused = false; UI.show(null); UI.hud(true); lastNow = performance.now(); requestLock();
+}
+function toggleView() {
+  settings.view = settings.view === 'fp' ? 'tp' : 'fp'; persist(); applySettings();
+  UI.toast(settings.view === 'fp' ? 'First-person view' : 'Third-person view');
+}
+function applySettings() {
+  setFirstPersonBody(settings.view === 'fp');
+  $('crosshair').classList.toggle('hidden', settings.view !== 'fp');
+  SFX.applyVolume(); applyQuality(); UI.syncSettings();
+}
+function applyQuality() {
+  const high = settings.quality === 'high';
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, high ? (isTouchDevice ? 1.75 : 2) : 1));
+  if (sun.castShadow !== high) sun.castShadow = high;
+  FX.rate = high ? 1 : 0.4;
+  resize();
+}
+
+// ---- pointer lock ----
+const isLocked = () => document.pointerLockElement === canvas;
+function requestLock() {
+  if (Input.touchMode || isLocked() || game.headless) return;
+  try { const p = canvas.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* not supported */ }
+}
+function exitLock() { if (isLocked()) { try { document.exitPointerLock(); } catch (e) { /* ignore */ } } }
+document.addEventListener('pointerlockchange', () => {
+  if (!isLocked() && (game.mode === 'countdown' || game.mode === 'running') && !game.paused && !Input.touchMode) pauseGame();
+});
+document.addEventListener('pointerlockerror', () => {});
+
+// ---- keyboard ----
+const GAME_KEYS = new Set(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight', 'KeyC', 'KeyE', 'KeyQ', 'Tab']);
+window.addEventListener('keydown', (e) => {
+  SFX.init();
+  const playing = (game.mode === 'countdown' || game.mode === 'running' || game.mode === 'finished') && !game.paused;
+  if (GAME_KEYS.has(e.code) && (playing || e.code === 'Space')) e.preventDefault();
+  if (e.target && e.target.tagName === 'INPUT') return;
+  Input.keys[e.code] = true;
+  if (e.repeat) return;
+  switch (e.code) {
+    case 'Space': if (playing) Input.jumpPressed = true; break;
+    case 'KeyE': case 'KeyQ': if (playing) Input.dashPressed = true; break;
+    case 'KeyR':
+      if (playing || game.paused || game.mode === 'results') { restartRun(); requestLock(); }
+      break;
+    case 'KeyN': if (game.mode === 'results' && !$('btnNext').disabled) playCourse(game.courseIndex + 1); break;
+    case 'Enter': if (game.mode === 'results') { if (!$('btnNext').disabled) playCourse(game.courseIndex + 1); else restartRun(); } else if (UI.current === 'title') goLevels(); break;
+    case 'KeyV': if (playing || game.paused) toggleView(); break;
+    case 'KeyM': settings.muted = !settings.muted; persist(); SFX.applyVolume(); UI.syncSettings(); UI.toast(settings.muted ? 'Sound off' : 'Sound on'); break;
+    case 'Escape': case 'KeyP':
+      if (game.paused) { if (performance.now() - game.pauseGuard > 250 && UI.current === 'pause') resumeGame(); else if (UI.current !== 'pause') doAction('back'); }
+      else if (playing && game.mode !== 'finished') pauseGame();
+      else if (UI.current && UI.current !== 'title' && UI.current !== 'loading') doAction('back');
+      break;
+  }
+});
+window.addEventListener('keyup', (e) => { Input.keys[e.code] = false; });
+
+// ---- mouse ----
+canvas.addEventListener('mousedown', () => {
+  SFX.init();
+  if ((game.mode === 'countdown' || game.mode === 'running' || game.mode === 'finished') && !game.paused) requestLock();
+});
+document.addEventListener('mousemove', (e) => {
+  if (!isLocked()) return;
+  // ignore the occasional huge spike some browsers emit when the lock engages
+  if (Math.abs(e.movementX) > 400 || Math.abs(e.movementY) > 400) return;
+  Input.lookDX += e.movementX * settings.sens * CONFIG.camera.mouseSens;
+  Input.lookDY += e.movementY * settings.sens * CONFIG.camera.mouseSens;
+});
+
+// ---- touch (pointer events): floating stick on the left, drag-to-look on the right, buttons ----
+function enableTouchMode() {
+  if (Input.touchMode) return;
+  Input.touchMode = true;
+  UI.hud(!$('hud').classList.contains('hidden'));
+  $('crosshair').classList.add('hidden');
+}
+const touchEl = $('touch'), stickEl = $('stick'), knobEl = $('stickKnob');
+function placeStickRest() { stickEl.style.left = `${Math.max(90, innerWidth * 0.14)}px`; stickEl.style.top = `${innerHeight - 110}px`; knobEl.style.transform = ''; }
+placeStickRest();
+touchEl.addEventListener('pointerdown', (e) => {
+  SFX.init(); e.preventDefault();
+  const btn = e.target.closest('.tbtn');
+  if (btn) {
+    btn.classList.add('on'); btn.setPointerCapture(e.pointerId);
+    const t = btn.dataset.t;
+    if (t === 'jump') { Input.tJump = true; Input.jumpPressed = true; }
+    else if (t === 'slide') Input.tSlide = true;
+    else if (t === 'dash') Input.dashPressed = true;
+    else if (t === 'pause') pauseGame();
+    else if (t === 'restart') restartRun();
+    else if (t === 'view') toggleView();
+    return;
+  }
+  touchEl.setPointerCapture(e.pointerId);
+  if (e.clientX < innerWidth * 0.45 && Input.stick.id === null) {
+    Input.stick.id = e.pointerId; Input.stick.ox = e.clientX; Input.stick.oy = e.clientY; Input.stick.x = Input.stick.y = 0;
+    stickEl.style.left = `${e.clientX}px`; stickEl.style.top = `${e.clientY}px`; stickEl.classList.add('on');
+  } else if (Input.look.id === null) { Input.look.id = e.pointerId; Input.look.x = e.clientX; Input.look.y = e.clientY; }
+}, { passive: false });
+touchEl.addEventListener('pointermove', (e) => {
+  if (e.pointerId === Input.stick.id) {
+    const R = 56; let dx = e.clientX - Input.stick.ox, dy = e.clientY - Input.stick.oy; const d = Math.hypot(dx, dy);
+    if (d > R) { dx *= R / d; dy *= R / d; }
+    knobEl.style.transform = `translate(${dx}px,${dy}px)`;
+    const m = Math.min(1, d / R), dead = 0.12, k = m < dead ? 0 : (m - dead) / (1 - dead) / (m || 1);
+    Input.stick.x = (dx / R) * k * 1.0; Input.stick.y = (-dy / R) * k;
+  } else if (e.pointerId === Input.look.id) {
+    Input.lookDX += (e.clientX - Input.look.x) * settings.sens * CONFIG.camera.touchSens;
+    Input.lookDY += (e.clientY - Input.look.y) * settings.sens * CONFIG.camera.touchSens;
+    Input.look.x = e.clientX; Input.look.y = e.clientY;
+  }
+}, { passive: false });
+function touchEnd(e) {
+  const btn = e.target.closest && e.target.closest('.tbtn');
+  if (btn) { btn.classList.remove('on'); const t = btn.dataset.t; if (t === 'jump') Input.tJump = false; else if (t === 'slide') Input.tSlide = false; }
+  if (e.pointerId === Input.stick.id) { Input.stick.id = null; Input.stick.x = Input.stick.y = 0; stickEl.classList.remove('on'); placeStickRest(); }
+  if (e.pointerId === Input.look.id) Input.look.id = null;
+}
+touchEl.addEventListener('pointerup', touchEnd); touchEl.addEventListener('pointercancel', touchEnd);
+window.addEventListener('pointerdown', (e) => { if (e.pointerType === 'touch') enableTouchMode(); }, { capture: true });
+// stop pinch-zoom / double-tap zoom / page scroll on mobile browsers that ignore touch-action
+document.addEventListener('touchmove', (e) => { if (e.touches.length > 1 || !e.target.closest('.scroll')) e.preventDefault(); }, { passive: false });
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+document.addEventListener('dblclick', (e) => e.preventDefault());
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+// ---- menus ----
+function doAction(act, el) {
+  SFX.init(); SFX.click();
+  switch (act) {
+    case 'play': goLevels(); break;
+    case 'back':
+      if (UI.current === 'settings' || UI.current === 'controls') UI.show(UI.back);
+      else if (UI.current === 'confirm') UI.show('settings');
+      else if (UI.current === 'levels') goTitle();
+      break;
+    case 'settings': UI.back = UI.current; UI.syncSettings(); UI.show('settings'); break;
+    case 'controls': UI.back = UI.current; $('ctlList').innerHTML = UI.controlsHtml(false); UI.show('controls'); break;
+    case 'resume': resumeGame(); break;
+    case 'restart': case 'retry': restartRun(); requestLock(); break;
+    case 'levels': goLevels(); break;
+    case 'title': goTitle(); break;
+    case 'next': playCourse(game.courseIndex + 1); break;
+    case 'resetSave': UI.show('confirm'); break;
+    case 'confirmReset': {
+      for (const c of COURSES) Store.remove(GHOST_KEY(c.id));
+      const s = { ...settings }; save = freshSave(); Object.assign(save.settings, s); save.settings = settings; persist();
+      ghost.data = null; UI.toast('Progress reset'); UI.show('settings'); UI.syncSettings(); break;
+    }
+  }
+}
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('[data-act]'); if (a) { doAction(a.dataset.act, a); return; }
+  const card = e.target.closest('[data-course]');
+  if (card) { const i = +card.dataset.course; if (isUnlocked(i)) { SFX.init(); SFX.click(); playCourse(i); } else UI.toast(`Finish course ${i} first`); }
+});
+$('setSens').addEventListener('input', (e) => { settings.sens = +e.target.value; persist(); UI.syncSettings(); });
+$('setFov').addEventListener('input', (e) => { settings.fov = +e.target.value; persist(); UI.syncSettings(); });
+$('setVol').addEventListener('input', (e) => { settings.volume = +e.target.value; persist(); SFX.applyVolume(); UI.syncSettings(); });
+$('setMute').addEventListener('click', () => { settings.muted = !settings.muted; persist(); SFX.applyVolume(); UI.syncSettings(); });
+$('setGhost').addEventListener('click', () => { settings.ghost = !settings.ghost; persist(); UI.syncSettings(); });
+$('setInvert').addEventListener('click', () => { settings.invertY = !settings.invertY; persist(); UI.syncSettings(); });
+$('setUnlockAll').addEventListener('click', () => { save.unlockAll = !save.unlockAll; persist(); UI.syncSettings(); });
+$('setView').addEventListener('click', (e) => { const v = e.target.dataset.v; if (v) { settings.view = v; persist(); applySettings(); } });
+$('setQuality').addEventListener('click', (e) => { const v = e.target.dataset.v; if (v) { settings.quality = v; persist(); applySettings(); } });
+
+// ---- window ----
+function resize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; setFov(camFx.hfov);
+  speedUniforms.uAspect.value = w / h;
+  FX.mat.uniforms.uScale.value = (renderer.getPixelRatio() * h) / (2 * Math.tan((camera.fov * Math.PI) / 360)) * 0.5;
+  placeStickRest();
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 150));
+document.addEventListener('visibilitychange', () => { if (document.hidden) { pauseGame(); SFX.silence(); } });
+window.addEventListener('blur', () => { if (!game.headless) pauseGame(); });
+
+// ============================================================================
+// MAIN LOOP: fixed 120 Hz simulation with render interpolation.
+// ============================================================================
+function simStep() {
+  world.time += STEP;
+  updateMovers(world, world.time);
+  const inp = game.botInput || Input;
+  if (game.mode === 'countdown') {
+    stepPlayer(STEP, inp, true);
+    game.cdSteps--;
+    const n = Math.ceil(game.cdSteps / CONFIG.physicsHz);
+    if (n !== game.cdShown && n > 0) { game.cdShown = n; UI.countdown(n); SFX.beep(false); }
+    if (game.cdSteps <= 0) startRunning();
+  } else if (game.mode === 'running') {
+    game.runSteps++;
+    stepPlayer(STEP, inp, false);
+    if (game.mode === 'running' && game.runSteps % GHOST_EVERY === 0) recordFrame();
+  } else {
+    stepPlayer(STEP, inp, true);
+  }
+  if (inp === Input) Input.consume();
+}
+
+// Turns physics events into sound, particles and camera feedback.
+function handleEvents() {
+  for (let i = 0; i < events.length; i += 3) {
+    const t = events[i], a = events[i + 1], b = events[i + 2], x = Pl.pos.x, y = Pl.pos.y, z = Pl.pos.z;
+    switch (t) {
+      case 'jump': SFX.jump(); FX.dust(x, y, z, 8, 2.5); playerRig.squash = -0.18; break;
+      case 'walljump': SFX.wallJump(); FX.burst(x, y + 1, z, 10, 4, '#ffffff', 0.35, 0.16); playerRig.squash = -0.2; break;
+      case 'land': { SFX.land(a); const n = Math.round(clamp(a * 1.2, 4, 22)); FX.dust(x, y, z, n, 1.5 + a * 0.18);
+        camFx.dipV -= Math.min(a, 20) * 0.11; playerRig.squash = Math.min(0.32, a * 0.022); break; }
+      case 'slide': SFX.slide(); FX.dust(x, y, z, 10, 3); break;
+      case 'wallrun': SFX.wallStart(); FX.burst(x - Pl.wallNX * 0.35, y + 1, z - Pl.wallNZ * 0.35, 8, 3, '#fff6c2', 0.3, 0.12); break;
+      case 'dash': SFX.dash(); camFx.kick += 9; camFx.speedLines = 1;
+        for (let k = 0; k < FX.count(26); k++) FX.emit(x + (Math.random() - 0.5) * 0.8, y + 0.4 + Math.random() * 1.2, z + (Math.random() - 0.5) * 0.8, -Pl.dashDX * (6 + Math.random() * 6), (Math.random() - 0.5) * 2, -Pl.dashDZ * (6 + Math.random() * 6), 0.4, 0.22, '#36d7ff', 0, 3, 2);
+        break;
+      case 'pad': SFX.pad(); FX.ring(a, y + 0.2, b, 28, 1.0, 5, world.pal.pad); FX.burst(a, y + 0.3, b, 12, 6, '#ffffff', 0.5, 0.16); camFx.kick += 4; break;
+      case 'checkpoint': SFX.checkpoint(); FX.burst(a, y + 2.2, b, 40, 7, '#5dffa0', 0.8, 0.2, 2, 4); break;
+      case 'respawn': SFX.respawn(); FX.burst(x, y + 1, z, 24, 4, '#ffffff', 0.5, 0.2); camFx.shake = 1; break;
+      case 'finish': SFX.finish(); for (let k = 0; k < 3; k++) FX.confetti(a, world.finish.y + 4.5, b, 70); camFx.kick += 6; break;
+      case 'newbest': SFX.newBest(); break;
+    }
+  }
+  events.length = 0;
+}
+
+function updateAudioLoops(dt) {
+  const playing = (game.mode === 'countdown' || game.mode === 'running' || game.mode === 'finished') && !game.paused;
+  if (!SFX.on) return;
+  if (!playing) { SFX.silence(); return; }
+  const hs = Math.hypot(Pl.vel.x, Pl.vel.z), sp = Math.hypot(hs, Pl.vel.y);
+  SFX.setLoop('wind', smoothstep(5, 20, sp) * (Pl.grounded ? 0.12 : 0.24), 250 + sp * 110);
+  SFX.setLoop('slide', Pl.sliding ? 0.11 + hs * 0.006 : 0, 1500 + hs * 60);
+  SFX.setLoop('scrape', Pl.wallRun ? 0.09 : 0, 3000 + Math.sin(performance.now() / 60) * 400);
+  // footsteps: stride length grows a little with speed
+  if ((Pl.grounded && !Pl.sliding && !Pl.crouched && hs > 1) || Pl.wallRun) {
+    camFx.stepDist += hs * dt;
+    const stride = 1.5 + hs * 0.05;
+    if (camFx.stepDist > stride) { camFx.stepDist = 0; SFX.step(hs, Pl.wallRun); }
+  } else camFx.stepDist = 0.9;
+}
+
+// Continuous particle trails (slide dust, wall-run sparks).
+function updateTrails(dt) {
+  if (game.mode !== 'running' && game.mode !== 'finished') return;
+  const x = Pl.pos.x, y = Pl.pos.y, z = Pl.pos.z;
+  if (Pl.sliding && Math.random() < dt * 40 * FX.rate) FX.emit(x + (Math.random() - 0.5) * 0.5, y + 0.05, z + (Math.random() - 0.5) * 0.5, -Pl.vel.x * 0.15, 0.8, -Pl.vel.z * 0.15, 0.5, 0.4, '#ffffff', 1, 2, 0);
+  if (Pl.wallRun && Math.random() < dt * 45 * FX.rate) FX.emit(x - Pl.wallNX * 0.33, y + 0.1 + Math.random() * 0.3, z - Pl.wallNZ * 0.33, -Pl.vel.x * 0.1 + Pl.wallNX * 2, 1 + Math.random() * 2, -Pl.vel.z * 0.1 + Pl.wallNZ * 2, 0.35, 0.12, '#fff2a8', 9, 1, 2);
+}
+
+let lastNow = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  let dt = (now - lastNow) / 1000; lastNow = now;
+  if (!(dt > 0)) dt = 0; if (dt > CONFIG.maxFrameDt) dt = CONFIG.maxFrameDt;
+  if (!world) return;
+  const playing = game.mode === 'countdown' || game.mode === 'running' || game.mode === 'finished';
+  // look (applied per frame for responsiveness; physics reads the current yaw)
+  if (playing && !game.paused) {
+    Pl.yaw = wrapAngle(Pl.yaw - Input.lookDX);
+    Pl.pitch = clamp(Pl.pitch - Input.lookDY * (settings.invertY ? -1 : 1), settings.view === 'tp' ? CONFIG.camera.tpPitchMin : -1.5, settings.view === 'tp' ? CONFIG.camera.tpPitchMax : 1.5);
+  }
+  Input.lookDX = Input.lookDY = 0;
+  Input.sample();
+  let alpha = 1;
+  if (playing && !game.paused && !game.headless) {
+    game.acc += dt;
+    let n = 0;
+    while (game.acc >= STEP && n < CONFIG.maxStepsPerFrame) { simStep(); game.acc -= STEP; n++; }
+    if (n >= CONFIG.maxStepsPerFrame) game.acc = 0;
+    alpha = game.acc / STEP;
+  } else if (!playing) {
+    world.time += dt; updateMovers(world, world.time);
+  }
+  if (game.mode === 'finished' && now >= game.resultsAt) showResults();
+  if (game.hintUntil && now > game.hintUntil) { game.hintUntil = 0; UI.showHint(false); save.hintsSeen = true; persist(); }
+
+  handleEvents();
+  renderPos.lerpVectors(Pl.prev, Pl.pos, alpha);
+  const rt = playing ? world.time - (1 - alpha) * STEP : world.time;
+  renderObstacles(world, rt, dt);
+
+  if (playing) {
+    updateCamera(dt);
+    // character (third person) / shadow proxy (first person)
+    playerRig.root.visible = true;
+    playerRig.root.position.copy(renderPos); playerRig.root.rotation.y = Pl.facing;
+    poseRig(playerRig, Pl.anim, Pl.phase, Math.hypot(Pl.vel.x, Pl.vel.z), now / 1000, dt);
+    updateGhost(game.mode === 'countdown' ? 0 : (game.runSteps - 1 + alpha) * STEP, dt);
+    updateSun(renderPos);
+    $('lockHint').classList.toggle('show', !Input.touchMode && !isLocked() && !game.paused && game.mode !== 'finished' && !game.headless);
+  } else {
+    // attract mode: slow orbit around the course
+    const bb = world.bounds, t = now / 1000 * 0.05;
+    const cx = (bb.min.x + bb.max.x) / 2, cz = (bb.min.z + bb.max.z) / 2, R = Math.max(40, (bb.max.z - bb.min.z) * 0.55);
+    camera.position.set(cx + Math.cos(t) * R, bb.max.y + 22, cz + Math.sin(t) * R);
+    camera.lookAt(cx, bb.min.y + 2, cz); setFov(95);
+    playerRig.root.visible = false; ghost.rig.root.visible = false;
+    _sv.set(cx, 0, cz); updateSun(_sv);
+    speedUniforms.uI.value = 0;
+  }
+  updateTrails(dt);
+  FX.update(dt);
+  updateAudioLoops(dt);
+  if (playing) UI.updateHud();
+  sky.position.copy(camera.position);
+  speedUniforms.uTime.value = now / 1000;
+  renderer.clear();
+  renderer.render(scene, camera);
+  if (speedUniforms.uI.value > 0.01) renderer.render(fxScene, fxCam);
+}
+
+// ============================================================================
+// DEBUG API (only with ?debug in the URL): used by automated tests and bots.
+// ============================================================================
+if (DEBUG) {
+  window.__sprint = {
+    CONFIG, COURSES, PALETTES, P, B, Pl, game, Input, ANIM, save: () => save, Store,
+    get world() { return world; },
+    buildCourse, playCourse, restartRun, goTitle, goLevels, showResults, pauseGame, resumeGame, toggleView, loadGhost, ghost, rec,
+    headless(on) { game.headless = on; },
+    skipCountdown() { while (game.mode === 'countdown') simStep(); },
+    step(inp, n = 1) { game.botInput = inp; for (let i = 0; i < n; i++) { simStep(); inp.jumpPressed = false; inp.dashPressed = false; } game.botInput = null; },
+    sim: simStep, runTime, kill,
+  };
+}
+
+// ============================================================================
+// START
+// ============================================================================
+applySettings();
+resize();
+goTitle();
+$('titleNote').textContent = isTouchDevice ? 'Touch controls enabled · landscape recommended' : 'Mouse + keyboard · click to capture the mouse';
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
