@@ -89,13 +89,15 @@ kbd{font:800 12px/1 var(--font);background:#eef0ff;border-radius:6px;padding:3px
 .card-hint{font-weight:600;font-size:13px;color:var(--ink-soft);line-height:1.3;min-height:34px}
 .card-best{font-weight:800;font-size:14px;color:var(--ink-soft)}
 .card-best b{color:var(--ink);font-size:17px;font-variant-numeric:tabular-nums}
-.card-medals{display:flex;gap:6px;flex-wrap:wrap}
+.card-medals{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.card-medals .mchip{font-size:11px;padding:3px 6px 3px 3px;gap:3px;justify-content:center}
+.card-medals .medal{--s:13px!important}
 .mchip{display:flex;align-items:center;gap:4px;font-weight:800;font-size:12px;font-variant-numeric:tabular-nums;background:#f3f4fb;border-radius:999px;padding:3px 8px 3px 3px}
 .card.locked{cursor:not-allowed}
 .card.locked .card-top{filter:grayscale(.85) brightness(.9)}
 .card.locked .card-body{opacity:.55}
 .lock{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:6px;
-  background:rgba(255,255,255,.35);font-weight:900;font-size:14px;color:var(--ink);text-align:center;padding:12px;z-index:2}
+  background:rgba(255,255,255,.8);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);font-weight:900;font-size:14px;color:var(--ink);text-align:center;padding:12px;z-index:2}
 .card.locked .lock{display:flex}
 .lock svg{width:30px;height:30px}
 
@@ -142,7 +144,7 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border:0;border-radiu
 .res-targets{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .res-targets .mchip.hit{background:#e7fbef}
 .res-splits{width:100%;max-height:150px;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums}
-.split-row{display:flex;justify-content:space-between;padding:6px 8px;border-radius:10px}
+.split-row{display:grid;grid-template-columns:1fr auto 74px;gap:10px;padding:6px 10px;border-radius:10px;text-align:left}
 .split-row:nth-child(odd){background:#f5f6fd}
 .split-row .d{min-width:70px;text-align:right}
 .d.good{color:var(--good)} .d.bad{color:var(--bad)}
@@ -163,14 +165,14 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border:0;border-radiu
   text-shadow:0 2px 0 rgba(255,255,255,.7),0 4px 14px rgba(28,18,80,.4);white-space:nowrap}
 .penalty-pop.go{animation:penalty 1.2s ease-out}
 @keyframes penalty{0%{opacity:0;transform:translate(-50%,-8px) scale(.7)}12%{opacity:1;transform:translate(-50%,0) scale(1.18)}25%{transform:translate(-50%,0) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,8px)}}
-.split-pop{position:absolute;top:23%;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px;opacity:0;
+.split-pop{position:absolute;top:29%;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px;opacity:0;
   font-weight:900;text-shadow:0 2px 0 rgba(28,18,80,.3),0 4px 14px rgba(28,18,80,.35);white-space:nowrap}
 .split-pop .lbl{font-size:13px;letter-spacing:.2em;text-transform:uppercase}
 .split-pop .t{font-size:30px;font-variant-numeric:tabular-nums}
 .split-pop .d{font-size:24px;font-variant-numeric:tabular-nums;padding:2px 12px;border-radius:999px;background:rgba(255,255,255,.92);text-shadow:none}
 .split-pop.go{animation:splitPop 2s ease-out}
 @keyframes splitPop{0%{opacity:0;transform:translate(-50%,10px) scale(.85)}10%{opacity:1;transform:translate(-50%,0) scale(1.06)}20%{transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-8px)}}
-.big-pop{position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);font:italic 900 clamp(44px,9vw,92px)/1 var(--font);white-space:nowrap;opacity:0;
+.big-pop{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);font:italic 900 clamp(44px,9vw,92px)/1 var(--font);white-space:nowrap;opacity:0;
   background:linear-gradient(100deg,#ffd23f,#ff8a3d 50%,#ff3d87);-webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 4px 0 rgba(28,18,80,.3)) drop-shadow(0 10px 20px rgba(28,18,80,.3))}
 .big-pop.go{animation:bigPop 2.4s cubic-bezier(.2,1.2,.3,1)}
@@ -220,6 +222,8 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border:0;border-radiu
 .stick{position:absolute;left:0;top:0;width:132px;height:132px;margin:-66px 0 0 -66px;border-radius:50%;border:2px solid rgba(255,255,255,.55);background:rgba(20,12,60,.2);opacity:.45;pointer-events:none;transition:opacity .15s}
 .stick.on{opacity:1}
 .knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 3px 10px rgba(0,0,0,.25)}
+body.touch .controls-hint{top:max(12px,env(safe-area-inset-top));bottom:auto;left:max(12px,env(safe-area-inset-left));font-size:12px;padding:10px 12px;gap:3px 8px;max-width:min(300px,40vw)}
+@media (max-width:640px){body.touch .hud-top{top:calc(70px + env(safe-area-inset-top))}body.touch .controls-hint{top:calc(175px + env(safe-area-inset-top));max-width:72vw}body.touch .hud-bottom{display:none}}
 @media (max-height:500px){.t-jump{width:92px;height:92px}.t-slide,.t-dash{width:70px;height:70px}.t-slide{right:calc(126px + env(safe-area-inset-right))}.t-dash{bottom:calc(128px + env(safe-area-inset-bottom))}.timer{font-size:40px}.speedo .v{font-size:20px}}
 @media (max-width:640px){.panel{padding:18px;border-radius:22px}.level-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}.medal-tally .tally span{display:none}}
 </style>
@@ -521,7 +525,8 @@ const Store = (() => {
   try { const k = '__sprint_probe__'; localStorage.setItem(k, '1'); localStorage.removeItem(k); ok = true; } catch (e) { ok = false; }
   return {
     get ok() { return ok; },
-    get(k) { if (!ok) return k in mem ? mem[k] : null; try { return localStorage.getItem(k); } catch (e) { return k in mem ? mem[k] : null; } },
+    // values written this session win (they survive even if a write hit the quota)
+    get(k) { if (k in mem) return mem[k]; if (!ok) return null; try { return localStorage.getItem(k); } catch (e) { return null; } },
     set(k, v) { mem[k] = v; if (!ok) return false; try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
     remove(k) { delete mem[k]; if (!ok) return; try { localStorage.removeItem(k); } catch (e) { /* ignore */ } },
   };
@@ -550,7 +555,7 @@ const settings = save.settings;
 function persist() { Store.set(SAVE_KEY, JSON.stringify(save)); }
 
 // Ghost storage: quantised (cm / milliradians) and delta-encoded flat integer arrays.
-function saveGhost(id, rec, time) {
+function encodeGhost(rec, time) {
   const n = rec.n, b = rec.buf, out = new Array(n * 6);
   let px = 0, py = 0, pz = 0, pa = 0;
   for (let i = 0; i < n; i++) {
@@ -559,11 +564,12 @@ function saveGhost(id, rec, time) {
     out[o + 4] = b[o + 4]; out[o + 5] = b[o + 5];
     px = b[o]; py = b[o + 1]; pz = b[o + 2]; pa = b[o + 3];
   }
-  return Store.set(GHOST_KEY(id), JSON.stringify({ v: 1, hz: CONFIG.ghost.hz, n, t: time, d: out }));
+  return JSON.stringify({ v: 1, hz: CONFIG.ghost.hz, n, t: time, d: out });
 }
-function loadGhost(id) {
+const loadGhost = (id) => parseGhost(Store.get(GHOST_KEY(id)));
+function parseGhost(json) {
   let g = null;
-  try { g = JSON.parse(Store.get(GHOST_KEY(id)) || 'null'); } catch (e) { g = null; }
+  try { g = JSON.parse(json || 'null'); } catch (e) { g = null; }
   if (!g || g.v !== 1 || g.hz !== CONFIG.ghost.hz || !Array.isArray(g.d) || g.d.length !== g.n * 6 || g.n < 2) return null;
   const f = new Float32Array(g.n * 6);
   let x = 0, y = 0, z = 0, a = 0;
@@ -698,7 +704,8 @@ const Input = {
 //   +0.8 m step-up: ≈3.9 m (+0.7) at 9 m/s.   Air dash: ≈3 m extra with no drop.
 //   Wall-run: up to 1.5 s at ≥10.5 m/s, sinking ≈0.4 m over a 12 m wall.
 //   Bounce pad (17 m/s): ≈5.6 m apex.  Slide hitbox 0.9 m tall.
-// MEDAL TIMES ARE TUNABLE: gold ≈ 10-15 % slower than a clean expert run.
+// MEDAL TIMES ARE TUNABLE: gold ≈ 13 % slower than a clean autopilot run of the course (a near-optimal
+// line through the real physics), silver ≈ gold × 1.24, bronze ≈ gold × 1.58.
 // ============================================================================
 const P = (x, top, z, w, d, t = 1.2, o) => Object.assign({ x, y: top - t / 2, z, w, h: t, d }, o);
 const B = (x, bottom, z, w, h, d, o) => Object.assign({ x, y: bottom + h / 2, z, w, h, d }, o);
@@ -725,11 +732,11 @@ const PALETTES = {
 const FWD = Math.PI, LEFT_X = Math.PI / 2;   // yaw facing +Z, yaw facing -X
 const COURSES = [
   // --------------------------------------------------------------------------
-  // 1. WARM-UP: straight platforms, simple jumps. Gaps ≤ 3.5 m (≈5.4 m max at 9 m/s) and every
+  // 1. WARM-UP: straight platforms, simple jumps. Gaps ≤ 4 m (≈5.4 m max at 9 m/s) and every
   //    landing pad is long enough that a full jump at 14 m/s (≈7.8 m) still lands.
   {
     id: 'warmup', name: 'Warm-Up', hint: 'Run and jump. Hold Space longer for higher jumps.',
-    palette: 'morning', medals: { gold: 20, silver: 25, bronze: 32 }, // TUNABLE
+    palette: 'morning', medals: { gold: 27, silver: 33, bronze: 43 }, // TUNABLE (autopilot clear: 23.9 s)
     start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
     platforms: [
       P(0, 0, 3, 8, 16),                 // start pad            -5..11
@@ -768,7 +775,7 @@ const COURSES = [
   //    onto small floating platforms, height changes and two 90° turns.
   {
     id: 'skysteps', name: 'Sky Steps', hint: 'Bigger gaps, smaller platforms. Jump from the very edge.',
-    palette: 'dawn', medals: { gold: 26, silver: 33, bronze: 42 }, // TUNABLE
+    palette: 'dawn', medals: { gold: 25, silver: 31, bronze: 40 }, // TUNABLE (autopilot clear: 21.9 s)
     start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
     platforms: [
       P(0, 0, 4, 8, 18),                 // start                -5..13
@@ -811,7 +818,7 @@ const COURSES = [
   //    after the previous landing so there is time to start the slide.
   {
     id: 'lowroad', name: 'Low Road', hint: 'Hold Shift or C at speed to slide under the striped barriers.',
-    palette: 'sunset', medals: { gold: 27, silver: 34, bronze: 44 }, // TUNABLE
+    palette: 'sunset', medals: { gold: 27, silver: 33, bronze: 43 }, // TUNABLE (autopilot clear: 23.5 s)
     start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
     platforms: [
       P(0, 0, 4, 8, 18),                 // start                -5..13
@@ -851,11 +858,11 @@ const COURSES = [
   },
   // --------------------------------------------------------------------------
   // 4. WALL STREET: wall-running. Wall-run speed 10.5 m/s for up to 1.5 s (≈15 m).
-  //    12-14 m gaps are only crossable on the chevron walls. Corridor walls are 4.4 m apart so a
+  //    The 12-25 m gaps are only crossable on the chevron walls (the 24-25 m ones need a wall-jump). Corridor walls are 4.4 m apart so a
   //    wall-jump (6.5 m/s out) crosses in ≈0.57 s with almost no height loss.
   {
     id: 'wallstreet', name: 'Wall Street', hint: 'Jump at a chevron wall while moving along it to wall-run. Space kicks off.',
-    palette: 'teal', medals: { gold: 24, silver: 30, bronze: 40 }, // TUNABLE
+    palette: 'teal', medals: { gold: 26, silver: 32, bronze: 41 }, // TUNABLE (autopilot clear: 22.9 s)
     start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
     platforms: [
       P(0, 0, 4, 8, 18),                 // start                -5..13
@@ -889,7 +896,7 @@ const COURSES = [
   //    when rising 4.5 m and 12-19 m ahead when dropping 1.5-2 m, so landings are long.
   {
     id: 'springboard', name: 'Springboard', hint: 'Pink pads launch you skyward. Steer (or brake) in the air to land.',
-    palette: 'lilac', medals: { gold: 25, silver: 32, bronze: 42 }, // TUNABLE
+    palette: 'lilac', medals: { gold: 24.5, silver: 30, bronze: 39 }, // TUNABLE (autopilot clear: 21.7 s)
     start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
     platforms: [
       P(0, 0, 4, 8, 18),                 // start                -5..13
@@ -924,7 +931,7 @@ const COURSES = [
   //    (apex 1.1 m); high bars (1.1-1.5 m) must be slid under. Movers carry you.
   {
     id: 'machine', name: 'Machine Room', hint: 'Time your hops onto moving platforms. Jump low bars, slide under high ones.',
-    palette: 'dusk', medals: { gold: 34, silver: 43, bronze: 55 }, // TUNABLE
+    palette: 'dusk', medals: { gold: 38.5, silver: 48, bronze: 61 }, // TUNABLE (autopilot clear: 33.6 s)
     start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
     platforms: [
       P(0, 0, 4, 8, 18),                 // start                -5..13
@@ -969,7 +976,7 @@ const COURSES = [
   //    gaps want a dash. The 3 m chimney gains ≈1 m per wall-jump (cross time ≈0.35 s).
   {
     id: 'skyline', name: 'Skyline', hint: 'Dash (E/Q) mid-air across long gaps. Wall-jump side to side to climb the chimney.',
-    palette: 'golden', medals: { gold: 26, silver: 33, bronze: 44 }, // TUNABLE
+    palette: 'golden', medals: { gold: 25, silver: 31, bronze: 40 }, // TUNABLE (autopilot clear: 22.0 s)
     start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
     platforms: [
       P(0, 0, 4, 8, 18),                 // start                -5..13
@@ -1003,7 +1010,7 @@ const COURSES = [
   // 8. GAUNTLET: everything, back to back, on narrow platforms. Glowing red strips are deadly.
   {
     id: 'gauntlet', name: 'Gauntlet', hint: 'Everything you have learned, back to back. Red glows mean death.',
-    palette: 'night', medals: { gold: 40, silver: 50, bronze: 64 }, // TUNABLE
+    palette: 'night', medals: { gold: 42, silver: 52, bronze: 66 }, // TUNABLE (autopilot clear: 36.9 s)
     start: { x: 0, y: 0, z: 0, yaw: FWD }, killY: -14,
     platforms: [
       P(0, 0, 4, 6, 18),                 // start                -5..13
@@ -1271,7 +1278,7 @@ const GATE_MATS = {
   white: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.5 }),
   cloud: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, emissive: '#ffffff', emissiveIntensity: 0.28 }),
 };
-const CURTAIN_OPACITY = { cp: 0.45, finish: 0.5, start: 0.55 };
+const CURTAIN_OPACITY = { cp: 0.4, finish: 0.5, start: 0.2 };
 const CP_TEX = labelTexture('CHECKPOINT', '#2ee67a', '#ffffff');
 const FINISH_TEX = labelTexture('FINISH', '#ffffff', '#1c1640', 512, 128, true);
 const START_TEX = labelTexture('START', '#ffffff', '#1c1640');
@@ -1953,7 +1960,7 @@ function recordFrame() {
   b[o + 5] = Math.round(Pl.phase * 100) % 100;
   rec.teleport = false; rec.n++;
 }
-const ghost = { data: null, rig: makeRig(true), speed: 0 };
+const ghost = { data: null, rig: makeRig(true), speed: 0, fade: 1 };
 scene.add(ghost.rig.root); ghost.rig.root.visible = false;
 const _gp = new THREE.Vector3();
 // Interpolates between the two recorded frames around time t (seconds since GO).
@@ -1974,10 +1981,13 @@ function updateGhost(t, dt) {
   const sp = Math.hypot(F[o1] - F[o0], F[o1 + 2] - F[o0 + 2]) * CONFIG.ghost.hz;
   ghost.speed = lerp(ghost.speed, sp, 0.2);
   const done = f >= g.n - 1;
-  R.visible = true;
+  ghost.fade = done ? Math.max(0.3, ghost.fade - dt * 1.2) : 1;
+  // fade out when the ghost overlaps the camera (start line, or when you are running inside it)
+  const near = smoothstep(0.7, 2.6, Math.hypot(_gp.x - camera.position.x, _gp.y + 1.1 - camera.position.y, _gp.z - camera.position.z));
+  R.visible = near > 0.02;
   R.position.copy(_gp); R.rotation.y = yaw;
   poseRig(ghost.rig, done ? ANIM.IDLE : (F[o0 + 4] & 15), phase, ghost.speed, performance.now() / 1000, dt);
-  MAT_GHOST.opacity = done ? Math.max(0.12, MAT_GHOST.opacity - dt * 0.5) : 0.4;
+  MAT_GHOST.opacity = 0.4 * ghost.fade * near;
 }
 
 // ============================================================================
@@ -2158,6 +2168,9 @@ function updateCamera(dt) {
     camera.position.set(px - fx * camFx.tpDist + shx, py - fy * camFx.tpDist + shy, pz - fz * camFx.tpDist);
     camera.rotation.set(Pl.pitch, Pl.yaw, camFx.roll * 0.5);
   }
+  // hide the body (shadow only) in first person, or when a wall pushes the 3rd-person camera into it
+  const hideBody = settings.view === 'fp' || !playing || camFx.tpDist < 1.0;
+  if (hideBody !== camFx.bodyHidden) { camFx.bodyHidden = hideBody; setFirstPersonBody(hideBody); }
   // speed lines
   camFx.speedLines = Math.max(camFx.speedLines - dt * 2.5, smoothstep(11, 17, sp3));
   speedUniforms.uI.value = playing ? camFx.speedLines : 0;
@@ -2253,7 +2266,7 @@ const UI = {
 // GAME FLOW
 // ============================================================================
 const game = {
-  mode: 'loading', paused: false, headless: false, botInput: null,
+  mode: 'loading', paused: false, headless: false, botInput: null, onStep: null,
   courseIndex: 0, acc: 0, cdSteps: 0, cdShown: 0,
   runSteps: 0, penalty: 0, lastCP: -1, splits: [], finalTime: 0, resultsAt: 0, pauseGuard: 0, hintUntil: 0,
 };
@@ -2267,7 +2280,7 @@ function ensureWorld(i) {
 }
 function goTitle() {
   game.mode = 'title'; game.paused = false;
-  ensureWorld(world ? COURSES.indexOf(world.def) : 0);
+  ensureWorld(world ? Math.max(0, COURSES.indexOf(world.def)) : 0);
   resetPlayer(world.start); resetObstacles(world);
   UI.hud(false); UI.show('title'); exitLock(); SFX.silence();
 }
@@ -2295,7 +2308,7 @@ function restartRun() {
   rec.n = 0; rec.overflow = false; rec.teleport = false;
   FX.clear(); events.length = 0; Input.consume();
   camFx.dip = camFx.dipV = 0; camFx.roll = 0; camFx.kick = 0; camFx.tpDist = CONFIG.camera.tpDist; camFx.pivotY = world.start.y + 1.5;
-  MAT_GHOST.opacity = 0.4;
+  ghost.fade = 1;
   $('timer').classList.remove('done'); UI.lastTimer = -1; UI.updateCp(); UI.clearCountdown();
   $('splitPop').classList.remove('go'); $('bigPop').classList.remove('go');
   if (UI.current !== null) UI.show(null);
@@ -2331,9 +2344,12 @@ function finishRun() {
   game.result = { t, prevT: prev ? prev.t : null, isPB, medal: medalFor(def, t), prevSplits: prev ? prev.splits || [] : [], splits };
   if (isPB) {
     save.best[id] = { t, splits };
+    game.result.ghostSaved = false;
     if (!rec.overflow) {
       recordFrame();
-      if (saveGhost(id, rec, t)) ghost.data = loadGhost(id);
+      const json = encodeGhost(rec, t);
+      ghost.data = parseGhost(json);                       // race it right away, even if storage fails
+      game.result.ghostSaved = Store.set(GHOST_KEY(id), json);
     }
   }
   const idx = COURSES.indexOf(def);
@@ -2352,7 +2368,7 @@ function showResults() {
   $('resTime').textContent = fmtTime(r.t);
   $('resBadge').innerHTML = r.isPB ? `<span class="new-best">${r.prevT == null ? 'FIRST CLEAR!' : 'NEW BEST!'}</span>` : '';
   const dEl = $('resDelta');
-  if (r.prevT == null) { dEl.textContent = 'Ghost saved. Now beat it!'; dEl.className = 'res-delta'; }
+  if (r.prevT == null) { dEl.textContent = r.ghostSaved ? 'Ghost saved. Now beat it!' : 'Ghost kept for this session. Now beat it!'; dEl.className = 'res-delta'; }
   else { const d = r.t - r.prevT; dEl.textContent = `${fmtDelta(d)} vs previous best (${fmtTime(r.prevT)})`; dEl.className = 'res-delta ' + (d < 0 ? 'good' : 'bad'); }
   $('resMedal').innerHTML = r.medal ? `${UI.medalEl(r.medal)}<span style="text-transform:capitalize">${r.medal} medal</span>` : `${UI.medalEl(null, 40)}<span style="color:var(--ink-soft)">No medal yet</span>`;
   $('resTargets').innerHTML = ['gold', 'silver', 'bronze'].map((m) => `<span class="mchip${r.t <= def.medals[m] ? ' hit' : ''}">${UI.medalEl(m, 16)}${fmtTime(def.medals[m])}</span>`).join('');
@@ -2382,7 +2398,7 @@ function toggleView() {
   UI.toast(settings.view === 'fp' ? 'First-person view' : 'Third-person view');
 }
 function applySettings() {
-  setFirstPersonBody(settings.view === 'fp');
+  camFx.bodyHidden = settings.view === 'fp'; setFirstPersonBody(camFx.bodyHidden);
   $('crosshair').classList.toggle('hidden', settings.view !== 'fp');
   SFX.applyVolume(); applyQuality(); UI.syncSettings();
 }
@@ -2451,6 +2467,7 @@ document.addEventListener('mousemove', (e) => {
 function enableTouchMode() {
   if (Input.touchMode) return;
   Input.touchMode = true;
+  document.body.classList.add('touch');
   UI.hud(!$('hud').classList.contains('hidden'));
   $('crosshair').classList.add('hidden');
 }
@@ -2579,6 +2596,7 @@ function simStep() {
     stepPlayer(STEP, inp, true);
   }
   if (inp === Input) Input.consume();
+  if (game.onStep) game.onStep();   // test hook (debug only)
 }
 
 // Turns physics events into sound, particles and camera feedback.
@@ -2673,8 +2691,8 @@ function frame(now) {
   } else {
     // attract mode: slow orbit around the course
     const bb = world.bounds, t = now / 1000 * 0.05;
-    const cx = (bb.min.x + bb.max.x) / 2, cz = (bb.min.z + bb.max.z) / 2, R = Math.max(40, (bb.max.z - bb.min.z) * 0.55);
-    camera.position.set(cx + Math.cos(t) * R, bb.max.y + 22, cz + Math.sin(t) * R);
+    const cx = (bb.min.x + bb.max.x) / 2, cz = (bb.min.z + bb.max.z) / 2, R = Math.max(40, Math.max(bb.max.z - bb.min.z, bb.max.x - bb.min.x) * 0.42);
+    camera.position.set(cx + Math.cos(t) * R, bb.max.y + 26, cz + Math.sin(t) * R);
     camera.lookAt(cx, bb.min.y + 2, cz); setFov(95);
     playerRig.root.visible = false; ghost.rig.root.visible = false;
     _sv.set(cx, 0, cz); updateSun(_sv);
@@ -2696,7 +2714,7 @@ function frame(now) {
 // ============================================================================
 if (DEBUG) {
   window.__sprint = {
-    CONFIG, COURSES, PALETTES, P, B, Pl, game, Input, ANIM, save: () => save, Store,
+    CONFIG, COURSES, PALETTES, P, B, Pl, game, Input, ANIM, save: () => save, Store, SFX, camera, sun, renderer, scene, camFx,
     get world() { return world; },
     buildCourse, playCourse, restartRun, goTitle, goLevels, showResults, pauseGame, resumeGame, toggleView, loadGhost, ghost, rec,
     headless(on) { game.headless = on; },
